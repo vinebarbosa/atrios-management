@@ -1,0 +1,21 @@
+<!-- @dsCard group="Effects" viewport="700x180" subtitle="Long-throw shadows + colored glows" name="Elevation & Glow" -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 30px 22px; background: var(--atr-surface-0); font-family: var(--atr-font-sans); display: flex; gap: 26px; flex-wrap: wrap; align-items: center; }
+  .sw { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .box { width: 96px; height: 62px; background: var(--atr-surface-card); border: 1px solid var(--atr-border-strong); border-radius: var(--atr-radius-2xl); }
+  .lbl { font-family: var(--atr-font-mono); font-size: 10px; color: var(--atr-text-7); }
+  .dot { width: 20px; height: 20px; border-radius: 50%; }
+</style>
+</head>
+<body>
+  <div class="sw"><div class="box" style="box-shadow:var(--atr-shadow-panel)"></div><span class="lbl">panel</span></div>
+  <div class="sw"><div class="box" style="box-shadow:var(--atr-shadow-modal)"></div><span class="lbl">modal</span></div>
+  <div class="sw"><div class="box" style="box-shadow:var(--atr-glow-new);border-color:var(--atr-primary-line)"></div><span class="lbl">glow-new</span></div>
+  <div class="sw"><span class="dot" style="background:var(--atr-status-done);box-shadow:var(--atr-glow-current)"></span><span class="lbl">status glow</span></div>
+</body>
+</html>

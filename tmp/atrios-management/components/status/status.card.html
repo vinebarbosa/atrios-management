@@ -1,0 +1,47 @@
+<!-- @dsCard group="Components" viewport="700x150" subtitle="Status pills, repo chips & badges" name="Status" -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin: 0; padding: 22px; background: var(--atr-surface-0); font-family: var(--atr-font-sans); }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .row:last-child { margin-bottom: 0; }
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const NS = (function () {
+      for (const k in window) { try { const v = window[k]; if (v && v.StatusPill && v.RepoChip) return v; } catch (e) {} }
+      return window;
+    })();
+    const { StatusPill, RepoChip, Badge } = NS;
+    const Graph = () => <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="4" cy="4" r="1.6"/><circle cx="4" cy="12" r="1.6"/><circle cx="12" cy="7" r="1.6"/><path d="M4 5.6v4.8M12 8.6c0 2-2 2.6-4 2.6" strokeLinecap="round"/></svg>;
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      <React.Fragment>
+        <div className="row">
+          <StatusPill hue="done" glow>Em Produção</StatusPill>
+          <StatusPill hue="progress">Em Progresso</StatusPill>
+          <StatusPill hue="review">Definição</StatusPill>
+          <StatusPill hue="test">Testes</StatusPill>
+          <StatusPill hue="archived">Descontinuado</StatusPill>
+        </div>
+        <div className="row">
+          <RepoChip name="web" />
+          <RepoChip name="api" />
+          <RepoChip name="mobile" />
+          <Badge tone="primary">novo</Badge>
+          <Badge tone="primary" pulse icon={<Graph/>}>auto</Badge>
+          <Badge tone="neutral" mono>#142</Badge>
+        </div>
+      </React.Fragment>
+    );
+  </script>
+</body>
+</html>

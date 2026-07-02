@@ -1,0 +1,93 @@
+/* ============================================================
+   ÁTRIOS — COLOR TOKENS
+   Dark, dense, Linear-inspired. Color is the language of status.
+   ============================================================ */
+
+:root {
+  /* ---- Base canvas & surfaces (near-black, cool) ---- */
+  --atr-canvas-top: #0d1018;   /* radial glow origin */
+  --atr-canvas-mid: #06070a;
+  --atr-canvas-base: #050506;
+  --atr-surface-0: #08090a;    /* window / panel body */
+  --atr-surface-1: #0a0b0d;    /* inset fields, board bg */
+  --atr-surface-2: #0b0c0e;    /* sidebar */
+  --atr-surface-3: #0c0d0f;    /* segmented control track */
+  --atr-surface-4: #0d0e11;    /* list group header */
+  --atr-surface-card: #111214; /* cards, modals */
+  --atr-surface-card-hover: #141518;
+  --atr-surface-raised: #17181b; /* github button, high inputs */
+  --atr-surface-selected: #131417;
+
+  /* ---- Hairlines & borders (white at low alpha) ---- */
+  --atr-border-subtle: rgba(255, 255, 255, 0.045);
+  --atr-border: rgba(255, 255, 255, 0.06);
+  --atr-border-strong: rgba(255, 255, 255, 0.08);
+  --atr-border-field: rgba(255, 255, 255, 0.10);
+  --atr-border-field-strong: rgba(255, 255, 255, 0.12);
+  --atr-border-hover: rgba(255, 255, 255, 0.20);
+
+  /* ---- Text ramp (cool grays, high → low) ---- */
+  --atr-text-hi: #f2f2f4;      /* display titles */
+  --atr-text-1: #eaeaec;       /* primary headings */
+  --atr-text-2: #dcdde1;       /* body strong / card titles */
+  --atr-text-3: #c8cad0;       /* secondary body */
+  --atr-text-4: #a9abb5;       /* muted body */
+  --atr-text-5: #9296a0;       /* labels */
+  --atr-text-6: #787c88;       /* captions */
+  --atr-text-7: #6b6f7a;       /* ids, faint meta */
+  --atr-text-8: #5c5f6a;       /* placeholder / hint */
+  --atr-text-9: #4f525b;       /* eyebrow, disabled */
+
+  /* ---- Brand / primary (indigo-violet) ---- */
+  --atr-primary: #5e6ad2;
+  --atr-primary-hover: #6b76e0;
+  --atr-primary-grad-a: #6f7bec;
+  --atr-primary-grad-b: #5460cf;
+  --atr-primary-text: #a9b0ec;   /* primary text on dark */
+  --atr-primary-text-hi: #c3c9f4;
+  --atr-primary-ink: #8b93ec;    /* eyebrow numerals */
+  --atr-primary-wash: rgba(94, 106, 210, 0.14); /* tinted chip bg */
+  --atr-primary-wash-strong: rgba(94, 106, 210, 0.16);
+  --atr-primary-line: rgba(94, 106, 210, 0.32);
+  --atr-primary-glow: rgba(94, 106, 210, 0.45);
+  --atr-avatar-grad-a: #4c6ef5;
+  --atr-avatar-grad-b: #8b5cf6;
+
+  /* ---- Status hues (the workflow spectrum) ---- */
+  --atr-status-todo: #8b8f98;      /* neutral gray — To Do / Descoberta */
+  --atr-status-discovery: #8b95a5;
+  --atr-status-progress: #e2b13c;  /* amber — Em Progresso */
+  --atr-status-dev: #e2b13c;       /* Desenvolvimento */
+  --atr-status-review: #5e9eff;    /* blue — Em Revisão / Definição */
+  --atr-status-test: #bb9af7;      /* violet — Testes */
+  --atr-status-done: #4cb782;      /* green — Concluído / Em Produção */
+  --atr-status-archived: #6b6f76;  /* dim gray — Descontinuado */
+
+  /* ---- Repository accents ---- */
+  --atr-repo-web: #7aa2f7;
+  --atr-repo-api: #e0af68;
+  --atr-repo-mobile: #bb9af7;
+
+  /* ---- Semantic (functional) ---- */
+  --atr-success: #4cb782;
+  --atr-warning: #e2b13c;
+  --atr-info: #5e9eff;
+  --atr-danger: #e06c6c;
+
+  /* ---- Fills (white washes for chips/hover) ---- */
+  --atr-fill-subtle: rgba(255, 255, 255, 0.022);
+  --atr-fill-1: rgba(255, 255, 255, 0.04);
+  --atr-fill-2: rgba(255, 255, 255, 0.05);
+  --atr-fill-3: rgba(255, 255, 255, 0.06);
+  --atr-fill-hover: rgba(255, 255, 255, 0.09);
+
+  /* ---- Backdrop scrim (over blurred app) ---- */
+  --atr-scrim: rgba(4, 5, 7, 0.62);
+  --atr-scrim-soft: rgba(4, 5, 7, 0.55);
+
+  /* ---- Semantic aliases ---- */
+  --atr-app-bg: radial-gradient(120% 90% at 30% -10%, var(--atr-canvas-top) 0%, var(--atr-canvas-mid) 55%, var(--atr-canvas-base) 100%);
+  --atr-text-body: var(--atr-text-4);
+  --atr-text-heading: var(--atr-text-hi);
+  --atr-eyebrow: var(--atr-text-9);
+}

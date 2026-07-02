@@ -1,0 +1,25 @@
+<!-- @dsCard group="Colors" viewport="700x150" subtitle="Indigo-violet primary + washes" name="Brand / Primary" -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 20px; background: var(--atr-surface-0); font-family: var(--atr-font-sans); }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .sw { display: flex; flex-direction: column; gap: 7px; }
+  .chip { width: 96px; height: 52px; border-radius: var(--atr-radius-lg); border: 1px solid var(--atr-border-strong); }
+  .lbl { font-size: 11px; color: var(--atr-text-5); }
+  .hex { font-family: var(--atr-font-mono); font-size: 10.5px; color: var(--atr-text-7); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="sw"><div class="chip" style="background:var(--atr-primary)"></div><span class="lbl">primary</span><span class="hex">#5E6AD2</span></div>
+    <div class="sw"><div class="chip" style="background:var(--atr-primary-hover)"></div><span class="lbl">primary-hover</span><span class="hex">#6B76E0</span></div>
+    <div class="sw"><div class="chip" style="background:linear-gradient(160deg,var(--atr-primary-grad-a),var(--atr-primary-grad-b))"></div><span class="lbl">brand gradient</span><span class="hex">160°</span></div>
+    <div class="sw"><div class="chip" style="background:var(--atr-primary-wash);border-color:var(--atr-primary-line)"></div><span class="lbl">primary-wash</span><span class="hex">14% α</span></div>
+    <div class="sw"><div class="chip" style="background:var(--atr-surface-0);color:var(--atr-primary-text);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">Aa</div><span class="lbl">primary-text</span><span class="hex">#A9B0EC</span></div>
+  </div>
+</body>
+</html>

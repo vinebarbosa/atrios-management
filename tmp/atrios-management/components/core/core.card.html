@@ -1,0 +1,48 @@
+<!-- @dsCard group="Components" viewport="700x170" subtitle="Buttons, icon buttons & avatars" name="Core" -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin: 0; padding: 22px; background: var(--atr-surface-0); font-family: var(--atr-font-sans); }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .row:last-child { margin-bottom: 0; }
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const NS = (function () {
+      for (const k in window) { try { const v = window[k]; if (v && v.Button && v.Avatar) return v; } catch (e) {} }
+      return window;
+    })();
+    const { Button, IconButton, Avatar } = NS;
+    const Plus = () => <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M8 3.5v9M3.5 8h9" strokeLinecap="round"/></svg>;
+    const Close = () => <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round"/></svg>;
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      <React.Fragment>
+        <div className="row">
+          <Button variant="primary">Criar produto</Button>
+          <Button variant="secondary">Cancelar</Button>
+          <Button variant="ghost">Ghost</Button>
+          <Button variant="dashed" icon={<Plus/>}>Adicionar repositório</Button>
+          <Button variant="primary" disabled>Disabled</Button>
+        </div>
+        <div className="row">
+          <Button variant="primary" size="sm" icon={<Plus/>}>Novo produto</Button>
+          <Button variant="secondary" size="lg">Large</Button>
+          <IconButton><Close/></IconButton>
+          <IconButton tinted><Plus/></IconButton>
+          <Avatar initials="MA" />
+          <Avatar initials="JR" size={34} />
+        </div>
+      </React.Fragment>
+    );
+  </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+/* ============================================================
+   ÁTRIOS — TYPOGRAPHY TOKENS
+   Inter for UI. Monospace for ids, code, branches, repos.
+   Tight tracking on display sizes; dense line-heights.
+   ============================================================ */
+
+:root {
+  /* ---- Families ---- */
+  --atr-font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --atr-font-mono: ui-monospace, 'SF Mono', 'Menlo', 'Consolas', monospace;
+
+  /* ---- Weights ---- */
+  --atr-weight-regular: 400;
+  --atr-weight-book: 450;   /* Inter's in-between — used for nav rest state */
+  --atr-weight-medium: 500;
+  --atr-weight-semibold: 600;
+  --atr-weight-bold: 700;
+
+  /* ---- Type scale (px, matches the product) ---- */
+  --atr-text-display: 25px;  /* product page title */
+  --atr-text-h1: 22px;       /* page H1 */
+  --atr-text-h2: 21px;       /* modal / auth title */
+  --atr-text-h3: 19px;       /* card panel title */
+  --atr-text-lg: 14px;       /* primary body / buttons */
+  --atr-text-md: 13.5px;     /* description body */
+  --atr-text-base: 13px;     /* default UI text */
+  --atr-text-sm: 12.5px;     /* secondary labels */
+  --atr-text-xs: 12px;       /* meta */
+  --atr-text-2xs: 11px;      /* ids, captions */
+  --atr-text-3xs: 10.5px;    /* eyebrow uppercase */
+  --atr-text-micro: 10px;    /* tag micro-labels */
+
+  /* ---- Line heights ---- */
+  --atr-leading-tight: 1.3;   /* headings */
+  --atr-leading-snug: 1.35;   /* card titles */
+  --atr-leading-normal: 1.5;  /* captions */
+  --atr-leading-body: 1.6;    /* descriptions */
+  --atr-leading-relaxed: 1.65;
+
+  /* ---- Letter spacing ---- */
+  --atr-tracking-display: -0.02em; /* large titles */
+  --atr-tracking-heading: -0.01em; /* mid headings */
+  --atr-tracking-normal: 0;
+  --atr-tracking-mono: 0.04em;     /* codes: POR */
+  --atr-tracking-eyebrow: 0.05em;  /* UPPERCASE labels */
+  --atr-tracking-eyebrow-wide: 0.06em;
+
+  /* ---- Semantic aliases ---- */
+  --atr-eyebrow-transform: uppercase;
+}

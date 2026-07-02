@@ -1,0 +1,184 @@
+<!-- @dsCard group="Átrios Management" viewport="1300x820" subtitle="Product page — header, collapsible context, board" name="Product Page" -->
+<!-- @startingPoint section="Átrios Management" subtitle="Full product page with stepper + kanban board" viewport="1300x900" -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--atr-canvas-base); font-family: var(--atr-font-sans); -webkit-font-smoothing: antialiased; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const NS = (function () {
+      for (const k in window) { try { const v = window[k]; if (v && v.Button && v.Stepper && v.TaskCard) return v; } catch (e) {} }
+      return window;
+    })();
+    const { Button, IconButton, Avatar, StatusPill, RepoChip, Badge, TaskCard, Stepper, Input, SegmentedControl, SidebarItem } = NS;
+
+    const ic = {
+      grid: <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>,
+      chevron: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#4f525b" strokeWidth="1.5"><path d="M6 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      caret: <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      ext: <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#6b6f7a" strokeWidth="1.5"><path d="M6 3h7v7M13 3l-7 7M11 9v4H3V5h4" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      plus: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M8 3.5v9M3.5 8h9" strokeLinecap="round"/></svg>,
+      kanban: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2" y="2.5" width="4.5" height="11" rx="1"/><rect x="9.5" y="2.5" width="4.5" height="7" rx="1"/></svg>,
+      list: <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 4h10M3 8h10M3 12h10" strokeLinecap="round"/></svg>,
+      logo: <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 10.2V6a4 4 0 0 1 8 0v4.2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/><path d="M1 10.4h10" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+    };
+
+    const products = [
+      { name: 'Pórtico', color: 'var(--atr-status-done)', active: true },
+      { name: 'Cortina', color: 'var(--atr-status-progress)' },
+      { name: 'Ábaco', color: 'var(--atr-status-test)' },
+      { name: 'Verso', color: 'var(--atr-status-review)' },
+      { name: 'Peristilo', color: 'var(--atr-status-todo)' },
+      { name: 'Colunata', color: 'var(--atr-status-progress)' },
+      { name: 'Frontão', color: 'var(--atr-status-archived)' },
+    ];
+    const repos = [
+      { name: 'portico-web', color: 'var(--atr-repo-web)' },
+      { name: 'portico-api', color: 'var(--atr-repo-api)' },
+      { name: 'portico-mobile', color: 'var(--atr-repo-mobile)' },
+    ];
+    const steps = [
+      { name: 'Descoberta', date: '12 fev' },
+      { name: 'Definição', date: '03 mar' },
+      { name: 'Desenvolvimento', date: '24 mar' },
+      { name: 'Testes', date: '19 mai' },
+      { name: 'Em Produção', date: '08 jun' },
+      { name: 'Descontinuado' },
+    ];
+    const cols = [
+      { title: 'To Do', color: 'var(--atr-status-todo)', count: 3, todo: true, cards: [
+        { id: 'POR-24', title: 'Ajustar timeout do gateway de pagamento', repo: 'api' },
+        { id: 'POR-25', title: 'Reunião de kickoff — cliente Vega' },
+        { id: 'POR-26', title: 'Revisar copy da tela de checkout', repo: 'web' },
+      ]},
+      { title: 'Em Progresso', color: 'var(--atr-status-progress)', count: 2, cards: [
+        { id: 'POR-19', title: 'Retry de webhooks do Stripe', repo: 'api', prNum: 142 },
+        { id: 'POR-21', title: 'Novo fluxo 3DS no checkout', repo: 'web' },
+      ]},
+      { title: 'Em Revisão', color: 'var(--atr-status-review)', count: 2, cards: [
+        { id: 'POR-17', title: 'Refatorar serviço de conciliação', repo: 'api', prNum: 138, auto: true },
+        { id: 'POR-20', title: 'Tela de histórico de transações', repo: 'web', prNum: 140 },
+      ]},
+      { title: 'Concluído', color: 'var(--atr-status-done)', count: 24, cards: [
+        { id: 'POR-12', title: 'Pipeline de CI/CD do serviço api', repo: 'api' },
+        { id: 'POR-15', title: 'Design tokens do app mobile', repo: 'mobile' },
+      ]},
+    ];
+
+    const eyebrow = { fontSize: 11, fontWeight: 600, color: 'var(--atr-text-8)', textTransform: 'uppercase', letterSpacing: '0.05em' };
+
+    function ProductPage() {
+      const [open, setOpen] = React.useState(true);
+      const [view, setView] = React.useState('kanban');
+      return (
+        <div style={{ width: 1300, height: 900, borderRadius: 'var(--atr-radius-2xl)', border: '1px solid var(--atr-border-strong)', overflow: 'hidden', background: 'var(--atr-surface-0)', boxShadow: 'var(--atr-shadow-panel)', display: 'flex' }}>
+          {/* sidebar */}
+          <aside style={{ width: 216, flex: '0 0 216px', background: 'var(--atr-surface-2)', borderRight: '1px solid var(--atr-border)', display: 'flex', flexDirection: 'column', padding: '14px 10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '6px 8px 14px' }}>
+              <div style={{ width: 22, height: 22, borderRadius: 6, background: 'linear-gradient(160deg,var(--atr-primary-grad-a),var(--atr-primary-grad-b))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{ic.logo}</div>
+              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--atr-text-1)', letterSpacing: '-0.01em' }}>Átrios</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 8px', borderRadius: 7, color: 'var(--atr-text-4)', fontSize: 13, fontWeight: 500 }}>{ic.grid} Produtos</div>
+            <div style={{ ...eyebrow, fontSize: 10.5, letterSpacing: '0.06em', padding: '16px 8px 6px' }}>Produtos</div>
+            {products.map(p => <SidebarItem key={p.name} label={p.name} color={p.color} active={p.active} />)}
+            <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 9, padding: 8, borderTop: '1px solid var(--atr-border-subtle)' }}>
+              <Avatar initials="MA" />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: 12.5, color: 'var(--atr-text-2)', fontWeight: 500 }}>Marina Alcântara</span>
+                <span style={{ fontSize: 11, color: 'var(--atr-text-8)' }}>@marina-atrios</span>
+              </div>
+            </div>
+          </aside>
+
+          {/* main */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            {/* breadcrumb */}
+            <div style={{ height: 44, borderBottom: '1px solid var(--atr-border-subtle)', display: 'flex', alignItems: 'center', gap: 8, padding: '0 22px', flex: '0 0 auto' }}>
+              <span style={{ fontSize: 12.5, color: 'var(--atr-text-6)' }}>Produtos</span>
+              {ic.chevron}
+              <span style={{ fontSize: 12.5, color: 'var(--atr-text-5)' }}>Pórtico</span>
+            </div>
+
+            {/* header */}
+            <div style={{ padding: '22px 22px 18px', flex: '0 0 auto', borderBottom: '1px solid var(--atr-border-subtle)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
+                <span style={{ width: 11, height: 11, borderRadius: '50%', background: 'var(--atr-status-done)', flex: '0 0 auto', boxShadow: 'var(--atr-glow-done)' }} />
+                <h2 style={{ margin: 0, fontSize: 25, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--atr-text-hi)' }}>Pórtico</h2>
+                <span style={{ fontFamily: 'var(--atr-font-mono)', fontSize: 12, fontWeight: 600, color: 'var(--atr-text-4)', background: 'var(--atr-fill-3)', border: '1px solid var(--atr-border-strong)', padding: '2.5px 9px', borderRadius: 6, letterSpacing: '0.04em' }}>POR</span>
+                <StatusPill hue="done">Em Produção</StatusPill>
+                <div style={{ marginLeft: 'auto' }} />
+                <Button variant="secondary" onClick={() => setOpen(o => !o)} icon={<span style={{ display: 'inline-flex', transform: open ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform var(--atr-dur) var(--atr-ease)' }}>{ic.caret}</span>}>Contexto</Button>
+              </div>
+            </div>
+
+            {/* context panel */}
+            {open && (
+              <div style={{ padding: '20px 22px 22px', flex: '0 0 auto', borderBottom: '1px solid var(--atr-border-subtle)', display: 'flex', flexDirection: 'column', gap: 22 }}>
+                <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 320 }}>
+                    <div style={{ ...eyebrow, marginBottom: 8 }}>Descrição</div>
+                    <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: 'var(--atr-text-4)', maxWidth: 560 }}>Gateway e checkout de pagamentos da Átrios. Processa transações via cartão, Pix e boleto, com antifraude integrado e conciliação automática.</p>
+                  </div>
+                  <div style={{ minWidth: 240 }}>
+                    <div style={{ ...eyebrow, marginBottom: 9 }}>Repositórios</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                      {repos.map(r => (
+                        <a key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 9, height: 34, padding: '0 11px', background: 'var(--atr-surface-1)', border: '1px solid var(--atr-border-field)', borderRadius: 8, textDecoration: 'none', cursor: 'pointer' }}>
+                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: r.color, flex: '0 0 auto' }} />
+                          <span style={{ fontSize: 12.5, color: 'var(--atr-text-2)', fontFamily: 'var(--atr-font-mono)' }}><span style={{ color: 'var(--atr-text-8)' }}>atrios/</span>{r.name}</span>
+                          <span style={{ marginLeft: 'auto' }}>{ic.ext}</span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ ...eyebrow, marginBottom: 16 }}>Etapa</div>
+                  <Stepper current={4} steps={steps} />
+                </div>
+              </div>
+            )}
+
+            {/* board */}
+            <div style={{ padding: '16px 20px 20px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <SegmentedControl value={view} onChange={setView} options={[
+                { value: 'kanban', label: 'Kanban', icon: ic.kanban },
+                { value: 'list', label: 'Lista', icon: ic.list },
+              ]} />
+              <div style={{ display: 'flex', gap: 14, flex: 1, minHeight: 0 }}>
+                {cols.map(col => (
+                  <div key={col.title} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 11 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 3px', flex: '0 0 auto' }}>
+                      <span style={{ width: 9, height: 9, borderRadius: '50%', background: col.color, flex: '0 0 auto' }} />
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--atr-text-3)', whiteSpace: 'nowrap' }}>{col.title}</span>
+                      <span style={{ fontSize: 12, color: 'var(--atr-text-8)' }}>{col.count}</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto' }}>
+                      {col.cards.map(c => <TaskCard key={c.id} {...c} />)}
+                      {col.todo && <Button variant="dashed" icon={ic.plus} style={{ justifyContent: 'flex-start', height: 34 }}>Novo card</Button>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<div style={{ padding: 24 }}><ProductPage/></div>);
+  </script>
+</body>
+</html>

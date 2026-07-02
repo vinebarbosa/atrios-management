@@ -1,0 +1,35 @@
+<!-- @dsCard group="Components" viewport="700x210" subtitle="Sidebar product rows" name="Navigation" -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin: 0; padding: 22px; background: var(--atr-surface-0); font-family: var(--atr-font-sans); }
+  .nav { width: 200px; background: var(--atr-surface-2); border: 1px solid var(--atr-border); border-radius: var(--atr-radius-lg); padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const NS = (function () {
+      for (const k in window) { try { const v = window[k]; if (v && v.SidebarItem) return v; } catch (e) {} }
+      return window;
+    })();
+    const { SidebarItem } = NS;
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      <div className="nav">
+        <SidebarItem label="Pórtico" color="var(--atr-status-done)" active />
+        <SidebarItem label="Cortina" color="var(--atr-status-progress)" />
+        <SidebarItem label="Ábaco" color="var(--atr-status-test)" />
+        <SidebarItem label="Verso" color="var(--atr-status-review)" />
+        <SidebarItem label="Frontão" color="var(--atr-status-archived)" />
+      </div>
+    );
+  </script>
+</body>
+</html>

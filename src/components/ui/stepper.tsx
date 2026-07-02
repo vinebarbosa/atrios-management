@@ -1,0 +1,102 @@
+import type { HTMLAttributes } from "react";
+import { cn } from "@/lib/cn";
+
+export interface Step {
+  name: string;
+  date?: string;
+  /** CSS color for the node. Defaults to the done-green token. */
+  color?: string;
+}
+
+export interface StepperProps extends HTMLAttributes<HTMLDivElement> {
+  steps: Step[];
+  current?: number;
+}
+
+/**
+ * Horizontal product-stage bar. Steps before `current` render filled +
+ * connected; the current step glows; future steps are hollow.
+ * Node color rides on currentColor so per-step colors stay one inline style.
+ */
+export function Stepper({
+  steps,
+  current = 0,
+  className,
+  ...rest
+}: StepperProps) {
+  return (
+    <div className={cn("flex items-start", className)} {...rest}>
+      {steps.map((s, i) => {
+        const isDone = i < current;
+        const isCurrent = i === current;
+        const color = s.color ?? "var(--color-status-done)";
+        const lineDone = "bg-status-done/33";
+        const lineIdle = "bg-line-strong";
+        return (
+          <div
+            key={s.name}
+            className="flex min-w-0 flex-1 flex-col items-center gap-2.5"
+          >
+            <div
+              className="flex h-5 w-full items-center justify-center"
+              style={{ color }}
+            >
+              <div
+                className={cn(
+                  "h-0.5 flex-1",
+                  i === 0
+                    ? "bg-transparent"
+                    : i <= current
+                      ? lineDone
+                      : lineIdle,
+                )}
+              />
+              <div
+                className={cn(
+                  "shrink-0 rounded-full",
+                  isDone &&
+                    "size-[15px] bg-current [box-shadow:0_0_0_3px_color-mix(in_srgb,currentColor_12%,transparent)]",
+                  isCurrent &&
+                    "size-[19px] bg-current [box-shadow:0_0_0_5px_color-mix(in_srgb,currentColor_17%,transparent),0_0_16px_color-mix(in_srgb,currentColor_47%,transparent)]",
+                  !isDone &&
+                    !isCurrent &&
+                    "size-[13px] border-[1.5px] border-line-hover bg-surface-3",
+                )}
+              />
+              <div
+                className={cn(
+                  "h-0.5 flex-1",
+                  i === steps.length - 1
+                    ? "bg-transparent"
+                    : i < current
+                      ? lineDone
+                      : lineIdle,
+                )}
+              />
+            </div>
+            <div
+              className={cn(
+                "whitespace-nowrap px-1.5 text-center text-xs",
+                isCurrent
+                  ? "font-semibold text-fg-1"
+                  : isDone
+                    ? "font-medium text-fg-6"
+                    : "font-medium text-fg-8",
+              )}
+            >
+              {s.name}
+            </div>
+            {(isDone || isCurrent) && s.date && (
+              <div
+                className={cn("text-[11px] font-medium", isDone && "text-fg-6")}
+                style={isCurrent ? { color } : undefined}
+              >
+                {s.date}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}

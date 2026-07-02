@@ -1,0 +1,43 @@
+/* ============================================================
+   ÁTRIOS — SPACING & LAYOUT TOKENS
+   Dense 2px-based rhythm. Gaps do the spacing work (flex/grid).
+   ============================================================ */
+
+:root {
+  /* ---- Space scale ---- */
+  --atr-space-0-5: 2px;
+  --atr-space-1: 4px;
+  --atr-space-1-5: 6px;
+  --atr-space-2: 8px;
+  --atr-space-2-5: 10px;
+  --atr-space-3: 11px;
+  --atr-space-3-5: 12px;
+  --atr-space-4: 14px;
+  --atr-space-5: 16px;
+  --atr-space-6: 18px;
+  --atr-space-7: 20px;
+  --atr-space-8: 22px;
+  --atr-space-10: 28px;
+  --atr-space-12: 32px;
+  --atr-space-16: 44px;
+
+  /* ---- Component control heights ---- */
+  --atr-control-sm: 28px;   /* segmented / compact button */
+  --atr-control-md: 30px;   /* toolbar button */
+  --atr-control-lg: 34px;   /* modal action / repo row */
+  --atr-control-field: 36px;/* input field */
+  --atr-control-field-lg: 38px;
+  --atr-control-auth: 44px; /* auth CTA — 44px min hit target */
+
+  /* ---- Layout ---- */
+  --atr-sidebar-w: 216px;
+  --atr-topbar-h: 53px;
+  --atr-breadcrumb-h: 44px;
+  --atr-content-max: 1360px;
+
+  /* ---- Icon sizes ---- */
+  --atr-icon-xs: 11px;
+  --atr-icon-sm: 13px;
+  --atr-icon-md: 15px;
+  --atr-icon-lg: 16px;
+}

@@ -1,0 +1,10 @@
+/* ============================================================
+   ÁTRIOS — WEBFONTS
+   Inter (400/450/500/600/700) via Google Fonts.
+   NOTE: loaded from the Google Fonts CDN rather than self-hosted
+   binaries. If you need offline/self-hosted @font-face, drop the
+   .woff2 files into /assets/fonts and replace this import.
+   Monospace uses the system stack (SF Mono / Menlo / Consolas).
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');

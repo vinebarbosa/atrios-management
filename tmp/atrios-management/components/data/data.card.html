@@ -1,0 +1,45 @@
+<!-- @dsCard group="Components" viewport="700x260" subtitle="Task cards & product-stage bar" name="Data" -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin: 0; padding: 22px; background: var(--atr-surface-0); font-family: var(--atr-font-sans); }
+  .cards { display: flex; gap: 10px; margin-bottom: 22px; }
+  .cards > div { width: 210px; }
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const NS = (function () {
+      for (const k in window) { try { const v = window[k]; if (v && v.TaskCard && v.Stepper) return v; } catch (e) {} }
+      return window;
+    })();
+    const { TaskCard, Stepper } = NS;
+    const steps = [
+      { name: 'Descoberta', date: '12 fev' },
+      { name: 'Definição', date: '03 mar' },
+      { name: 'Desenvolvimento', date: '24 mar' },
+      { name: 'Testes', date: '19 mai' },
+      { name: 'Em Produção', date: '08 jun' },
+      { name: 'Descontinuado' },
+    ];
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      <React.Fragment>
+        <div className="cards">
+          <TaskCard id="POR-27" title="Configurar alertas de falha no gateway" repo="api" isNew />
+          <TaskCard id="POR-17" title="Refatorar serviço de conciliação" repo="api" auto prNum={138} />
+          <TaskCard id="POR-25" title="Reunião de kickoff — cliente Vega" />
+        </div>
+        <Stepper current={4} steps={steps} />
+      </React.Fragment>
+    );
+  </script>
+</body>
+</html>

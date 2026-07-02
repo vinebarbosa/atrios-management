@@ -1,0 +1,25 @@
+<!-- @dsCard group="Colors" viewport="700x150" subtitle="Near-black cool surface ramp" name="Surfaces" -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 20px; background: var(--atr-canvas-base); font-family: var(--atr-font-sans); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .sw { display: flex; flex-direction: column; gap: 6px; }
+  .chip { width: 92px; height: 50px; border-radius: var(--atr-radius-lg); border: 1px solid var(--atr-border-strong); }
+  .lbl { font-size: 10.5px; color: var(--atr-text-5); }
+  .hex { font-family: var(--atr-font-mono); font-size: 10px; color: var(--atr-text-7); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="sw"><div class="chip" style="background:var(--atr-surface-0)"></div><span class="lbl">surface-0</span><span class="hex">#08090A</span></div>
+    <div class="sw"><div class="chip" style="background:var(--atr-surface-1)"></div><span class="lbl">surface-1</span><span class="hex">#0A0B0D</span></div>
+    <div class="sw"><div class="chip" style="background:var(--atr-surface-2)"></div><span class="lbl">surface-2</span><span class="hex">#0B0C0E</span></div>
+    <div class="sw"><div class="chip" style="background:var(--atr-surface-card)"></div><span class="lbl">surface-card</span><span class="hex">#111214</span></div>
+    <div class="sw"><div class="chip" style="background:var(--atr-surface-raised)"></div><span class="lbl">surface-raised</span><span class="hex">#17181B</span></div>
+  </div>
+</body>
+</html>

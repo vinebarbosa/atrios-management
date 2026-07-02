@@ -1,0 +1,44 @@
+<!-- @dsCard group="Components" viewport="700x150" subtitle="Fields & segmented control" name="Forms" -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin: 0; padding: 22px; background: var(--atr-surface-0); font-family: var(--atr-font-sans); }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .fld { width: 200px; }
+  .fld.sm { width: 96px; }
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const NS = (function () {
+      for (const k in window) { try { const v = window[k]; if (v && v.Input && v.SegmentedControl) return v; } catch (e) {} }
+      return window;
+    })();
+    const { Input, SegmentedControl } = NS;
+    const Kanban = () => <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><rect x="2" y="2.5" width="4.5" height="11" rx="1"/><rect x="9.5" y="2.5" width="4.5" height="7" rx="1"/></svg>;
+    const List = () => <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 4h10M3 8h10M3 12h10" strokeLinecap="round"/></svg>;
+    function Demo() {
+      const [v, setV] = React.useState('kanban');
+      return (
+        <div className="row">
+          <div className="fld"><Input placeholder="Nome do produto" /></div>
+          <div className="fld sm"><Input value="POR" mono focused readOnly /></div>
+          <SegmentedControl value={v} onChange={setV} options={[
+            { value: 'kanban', label: 'Kanban', icon: <Kanban/> },
+            { value: 'list', label: 'Lista', icon: <List/> },
+          ]} />
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+  </script>
+</body>
+</html>

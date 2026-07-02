@@ -1,0 +1,26 @@
+<!-- @dsCard group="Colors" viewport="700x160" subtitle="The workflow spectrum — color is status" name="Status Spectrum" -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 20px; background: var(--atr-surface-0); font-family: var(--atr-font-sans); }
+  .row { display: flex; gap: 18px; flex-wrap: wrap; }
+  .sw { display: flex; flex-direction: column; align-items: center; gap: 9px; }
+  .dot { width: 26px; height: 26px; border-radius: 50%; }
+  .lbl { font-size: 11px; color: var(--atr-text-4); }
+  .hex { font-family: var(--atr-font-mono); font-size: 10px; color: var(--atr-text-7); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="sw"><span class="dot" style="background:var(--atr-status-todo)"></span><span class="lbl">To Do</span><span class="hex">#8B8F98</span></div>
+    <div class="sw"><span class="dot" style="background:var(--atr-status-review)"></span><span class="lbl">Definição</span><span class="hex">#5E9EFF</span></div>
+    <div class="sw"><span class="dot" style="background:var(--atr-status-progress)"></span><span class="lbl">Progresso</span><span class="hex">#E2B13C</span></div>
+    <div class="sw"><span class="dot" style="background:var(--atr-status-test)"></span><span class="lbl">Testes</span><span class="hex">#BB9AF7</span></div>
+    <div class="sw"><span class="dot" style="background:var(--atr-status-done);box-shadow:var(--atr-glow-done)"></span><span class="lbl">Produção</span><span class="hex">#4CB782</span></div>
+    <div class="sw"><span class="dot" style="background:var(--atr-status-archived)"></span><span class="lbl">Arquivado</span><span class="hex">#6B6F76</span></div>
+  </div>
+</body>
+</html>

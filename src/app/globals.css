@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+/* ============================================================
+   ÁTRIOS DESIGN SYSTEM — Tailwind v4 theme
+   Ported from tmp/atrios-management/tokens/*.css.
+   Dark, dense, Linear-inspired. Color is the language of status.
+   ============================================================ */
+@theme {
+  /* ---- Canvas & surfaces (near-black, cool) ---- */
+  --color-canvas-top: #0d1018;
+  --color-canvas-mid: #06070a;
+  --color-canvas-base: #050506;
+  --color-surface-0: #08090a;
+  --color-surface-1: #0a0b0d;
+  --color-surface-2: #0b0c0e;
+  --color-surface-3: #0c0d0f;
+  --color-surface-4: #0d0e11;
+  --color-surface-card: #111214;
+  --color-surface-card-hover: #141518;
+  --color-surface-raised: #17181b;
+  --color-surface-selected: #131417;
+
+  /* ---- Hairlines (white at low alpha) — utilities: border-line* ---- */
+  --color-line-subtle: rgba(255, 255, 255, 0.045);
+  --color-line: rgba(255, 255, 255, 0.06);
+  --color-line-strong: rgba(255, 255, 255, 0.08);
+  --color-line-field: rgba(255, 255, 255, 0.1);
+  --color-line-field-strong: rgba(255, 255, 255, 0.12);
+  --color-line-hover: rgba(255, 255, 255, 0.2);
+
+  /* ---- Text ramp (cool grays, high → low) — utilities: text-fg* ---- */
+  --color-fg-hi: #f2f2f4;
+  --color-fg-1: #eaeaec;
+  --color-fg-2: #dcdde1;
+  --color-fg-3: #c8cad0;
+  --color-fg-4: #a9abb5;
+  --color-fg-5: #9296a0;
+  --color-fg-6: #787c88;
+  --color-fg-7: #6b6f7a;
+  --color-fg-8: #5c5f6a;
+  --color-fg-9: #4f525b;
+
+  /* ---- Brand / primary (indigo-violet) ---- */
+  --color-primary: #5e6ad2;
+  --color-primary-hover: #6b76e0;
+  --color-primary-grad-a: #6f7bec;
+  --color-primary-grad-b: #5460cf;
+  --color-primary-fg: #a9b0ec;
+  --color-primary-fg-hi: #c3c9f4;
+  --color-primary-ink: #8b93ec;
+  --color-avatar-a: #4c6ef5;
+  --color-avatar-b: #8b5cf6;
+
+  /* ---- Status hues (bare hex so /opacity washes work) ---- */
+  --color-status-todo: #8b8f98;
+  --color-status-progress: #e2b13c;
+  --color-status-review: #5e9eff;
+  --color-status-test: #bb9af7;
+  --color-status-done: #4cb782;
+  --color-status-archived: #6b6f76;
+
+  /* ---- Repository accents ---- */
+  --color-repo-web: #7aa2f7;
+  --color-repo-api: #e0af68;
+  --color-repo-mobile: #bb9af7;
+
+  /* ---- Semantic ---- */
+  --color-success: #4cb782;
+  --color-warning: #e2b13c;
+  --color-info: #5e9eff;
+  --color-danger: #e06c6c;
+
+  /* ---- Fonts ---- */
+  --font-sans: var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
+  --font-weight-book: 450; /* Inter's in-between — nav rest state */
+
+  /* ---- Corner radii ---- */
+  --radius-id: 4px; /* mono id chips */
+  --radius-chip: 5px; /* micro tags / badges */
+  --radius-nav: 6px; /* nav items, icon buttons */
+  --radius-btn: 7px; /* buttons, fields */
+  --radius-field: 8px; /* cards, inputs */
+  --radius-auth: 9px; /* auth CTA */
+  --radius-panel: 14px; /* panels, modals, windows */
+  --radius-pill: 20px; /* status pills */
+
+  /* ---- Elevation shadows & glows ---- */
+  --shadow-panel: 0 30px 80px -24px rgba(0, 0, 0, 0.75);
+  --shadow-modal: 0 24px 60px -12px rgba(0, 0, 0, 0.7);
+  --shadow-brand: 0 4px 14px rgba(94, 106, 210, 0.45);
+  --shadow-glow-new: 0 0 20px -4px rgba(94, 106, 210, 0.35);
+  --shadow-glow-done: 0 0 12px rgba(76, 183, 130, 0.53);
+  --shadow-glow-current: 0 0 16px rgba(76, 183, 130, 0.47);
+
+  /* ---- Motion ---- */
+  --ease-atr: cubic-bezier(0.4, 0, 0.2, 1);
+  --animate-autopulse: autopulse 2.6s ease-in-out infinite;
+  --animate-caret: caret 1s steps(1) infinite;
+}
+
+/* ---- Shared keyframes ---- */
+@keyframes autopulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(94, 106, 210, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(94, 106, 210, 0.22);
+  }
+}
+@keyframes caret {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---- App canvas & typography baseline ---- */
+body {
+  min-height: 100vh;
+  background: radial-gradient(
+      120% 90% at 30% -10%,
+      var(--color-canvas-top) 0%,
+      var(--color-canvas-mid) 55%,
+      var(--color-canvas-base) 100%
+    )
+    var(--color-canvas-base);
+  background-attachment: fixed;
+  color: var(--color-fg-4);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---- Scrollbars (from the design doc) ---- */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
