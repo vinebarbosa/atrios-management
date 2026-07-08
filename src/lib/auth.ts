@@ -23,8 +23,21 @@ export async function pendingInvite(email: string) {
   return inv;
 }
 
+// Origens confiáveis para o check de CSRF do better-auth. Inclui a URL pública
+// (BETTER_AUTH_URL) e as URLs que a Vercel injeta — cobre produção e os
+// deploys de preview, cuja URL muda a cada push.
+const trustedOrigins = [
+  process.env.BETTER_AUTH_URL,
+  process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  process.env.VERCEL_URL,
+  process.env.VERCEL_BRANCH_URL,
+]
+  .filter((u): u is string => Boolean(u))
+  .map((u) => (u.startsWith("http") ? u : `https://${u}`));
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg", schema }),
+  trustedOrigins,
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
