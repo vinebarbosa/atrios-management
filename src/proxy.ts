@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from "next/server";
 // Rotas alcançáveis sem sessão. Checagem otimista (só presença do cookie):
 // a verificação real acontece no AppShell/actions com auth.api.getSession.
 const PUBLIC =
-  /^\/(login|esqueci-senha|redefinir-senha|convite|sem-convite|api\/auth)(\/|$)/;
+  /^\/(login|esqueci-senha|redefinir-senha|convite|sem-convite|termos|privacidade|api\/auth)(\/|$)/;
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
