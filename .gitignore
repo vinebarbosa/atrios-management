@@ -43,3 +43,6 @@ next-env.d.ts
 # claude code local settings (per-developer)
 .claude/settings.local.json
 !.env.example
+
+# design mockups (exports standalone da ferramenta de design — referência, não código)
+*(standalone).html

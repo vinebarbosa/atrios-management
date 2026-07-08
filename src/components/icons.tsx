@@ -387,3 +387,76 @@ export function GitHubIcon({ size = 18 }: IconProps) {
     </svg>
   );
 }
+
+export function KeyIcon({ size = 15 }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      aria-hidden="true"
+    >
+      <circle cx="5" cy="11" r="2.8" />
+      <path
+        d="M7.2 8.8 13.8 2.2M11.2 4.8l2.3 2.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function SearchIcon({ size = 13 }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      aria-hidden="true"
+    >
+      <circle cx="7" cy="7" r="4.2" />
+      <path d="M10.2 10.2 14 14" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function EyeIcon({ size = 13 }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      aria-hidden="true"
+    >
+      <path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z" />
+      <circle cx="8" cy="8" r="2.2" />
+    </svg>
+  );
+}
+
+export function EyeOffIcon({ size = 13 }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      aria-hidden="true"
+    >
+      <path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z" />
+      <circle cx="8" cy="8" r="2.2" />
+      <path d="M2.5 13.5 13.5 2.5" strokeLinecap="round" />
+    </svg>
+  );
+}

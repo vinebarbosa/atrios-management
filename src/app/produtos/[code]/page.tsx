@@ -1,5 +1,8 @@
+import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import { productByCode } from "@/lib/mock-data";
+import { db } from "@/db";
+import { access } from "@/db/schema";
+import { formatStageDate, STAGES } from "@/lib/product-constants";
 import { ProductBoard } from "./product-board";
 
 export default async function ProductPage({
@@ -8,7 +11,53 @@ export default async function ProductPage({
   params: Promise<{ code: string }>;
 }) {
   const { code } = await params;
-  const product = productByCode(code);
-  if (!product) notFound();
-  return <ProductBoard product={product} />;
+  const row = await db.query.product.findFirst({
+    where: (p, { eq }) => eq(p.code, code.toUpperCase()),
+    with: {
+      repos: true,
+      cards: { orderBy: (c, { desc }) => desc(c.createdAt) },
+      stageEvents: { orderBy: (e, { asc }) => asc(e.enteredAt) },
+    },
+  });
+  if (!row) notFound();
+
+  const accessCount = await db.$count(access, eq(access.productId, row.id));
+
+  // Data mais recente em que o produto entrou em cada etapa.
+  const stageDates: (string | null)[] = STAGES.map(() => null);
+  for (const e of row.stageEvents) {
+    if (e.stage >= 0 && e.stage < stageDates.length)
+      stageDates[e.stage] = formatStageDate(e.enteredAt);
+  }
+
+  return (
+    <ProductBoard
+      accessCount={accessCount}
+      product={{
+        id: row.id,
+        name: row.name,
+        code: row.code,
+        stage: row.stage,
+        description: row.description,
+        longDescription: row.longDescription,
+        stageDates,
+        repos: row.repos.map((r) => ({
+          id: r.id,
+          label: r.label,
+          name: r.name,
+        })),
+      }}
+      cards={row.cards.map((c) => ({
+        id: c.id,
+        seq: c.seq,
+        title: c.title,
+        description: c.description,
+        status: c.status,
+        repoId: c.repoId,
+        prNumber: c.prNumber,
+        prUrl: c.prUrl,
+        auto: c.auto,
+      }))}
+    />
+  );
 }

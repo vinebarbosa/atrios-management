@@ -11,6 +11,8 @@ export interface Step {
 export interface StepperProps extends HTMLAttributes<HTMLDivElement> {
   steps: Step[];
   current?: number;
+  /** Torna cada etapa clicável (ex.: mudar a etapa do produto). */
+  onStepClick?: (index: number) => void;
 }
 
 /**
@@ -21,9 +23,11 @@ export interface StepperProps extends HTMLAttributes<HTMLDivElement> {
 export function Stepper({
   steps,
   current = 0,
+  onStepClick,
   className,
   ...rest
 }: StepperProps) {
+  const Cell = onStepClick ? "button" : "div";
   return (
     <div className={cn("flex items-start", className)} {...rest}>
       {steps.map((s, i) => {
@@ -33,9 +37,17 @@ export function Stepper({
         const lineDone = "bg-status-done/33";
         const lineIdle = "bg-line-strong";
         return (
-          <div
+          <Cell
             key={s.name}
-            className="flex min-w-0 flex-1 flex-col items-center gap-2.5"
+            {...(onStepClick && {
+              type: "button" as const,
+              title: `Mover para ${s.name}`,
+              onClick: () => onStepClick(i),
+            })}
+            className={cn(
+              "flex min-w-0 flex-1 flex-col items-center gap-2.5",
+              onStepClick && "group cursor-pointer",
+            )}
           >
             <div
               className="flex h-5 w-full items-center justify-center"
@@ -82,6 +94,7 @@ export function Stepper({
                   : isDone
                     ? "font-medium text-fg-6"
                     : "font-medium text-fg-8",
+                onStepClick && !isCurrent && "group-hover:text-fg-2",
               )}
             >
               {s.name}
@@ -94,7 +107,7 @@ export function Stepper({
                 {s.date}
               </div>
             )}
-          </div>
+          </Cell>
         );
       })}
     </div>

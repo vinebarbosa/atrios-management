@@ -1,5 +1,13 @@
 import { relations } from "drizzle-orm";
-import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -102,6 +110,9 @@ export const inviteRelations = relations(invite, ({ one }) => ({
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+  accessesCreated: many(access, { relationName: "accessCreatedBy" }),
+  accessesRotated: many(access, { relationName: "accessRotatedBy" }),
+  accessEvents: many(accessEvent, { relationName: "accessEventUser" }),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -117,3 +128,212 @@ export const accountRelations = relations(account, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+/* ---- Produtos ---------------------------------------------------------- */
+
+export type CardStatus = "todo" | "progress" | "review" | "done";
+
+export const product = pgTable("product", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(),
+  // Prefixo dos ids de card (POR-12); 2–4 chars alfanuméricos maiúsculos.
+  code: text("code").notNull().unique(),
+  description: text("description").notNull().default(""),
+  longDescription: text("long_description"),
+  // Índice no catálogo estático de etapas (STAGES): 0=Descoberta … 5=Descontinuado.
+  stage: integer("stage").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
+export const productRepo = pgTable(
+  "product_repo",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    productId: text("product_id")
+      .notNull()
+      .references(() => product.id, { onDelete: "cascade" }),
+    label: text("label").notNull(),
+    name: text("name").notNull(),
+  },
+  (table) => [index("product_repo_productId_idx").on(table.productId)],
+);
+
+export const card = pgTable(
+  "card",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    productId: text("product_id")
+      .notNull()
+      .references(() => product.id, { onDelete: "cascade" }),
+    // Número sequencial por produto; nunca reutilizado (id exibido: CODE-seq).
+    seq: integer("seq").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    status: text("status").$type<CardStatus>().notNull().default("todo"),
+    // set null: card sobrevive à remoção do repositório
+    repoId: text("repo_id").references(() => productRepo.id, {
+      onDelete: "set null",
+    }),
+    prNumber: integer("pr_number"),
+    prUrl: text("pr_url"),
+    auto: boolean("auto").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("card_productId_seq_uq").on(table.productId, table.seq),
+    index("card_productId_status_idx").on(table.productId, table.status),
+  ],
+);
+
+export const productStageEvent = pgTable(
+  "product_stage_event",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    productId: text("product_id")
+      .notNull()
+      .references(() => product.id, { onDelete: "cascade" }),
+    stage: integer("stage").notNull(),
+    enteredAt: timestamp("entered_at").defaultNow().notNull(),
+  },
+  (table) => [index("product_stage_event_productId_idx").on(table.productId)],
+);
+
+export const productRelations = relations(product, ({ many }) => ({
+  repos: many(productRepo),
+  cards: many(card),
+  stageEvents: many(productStageEvent),
+  accesses: many(access),
+}));
+
+export const productRepoRelations = relations(productRepo, ({ one, many }) => ({
+  product: one(product, {
+    fields: [productRepo.productId],
+    references: [product.id],
+  }),
+  cards: many(card),
+}));
+
+export const cardRelations = relations(card, ({ one }) => ({
+  product: one(product, {
+    fields: [card.productId],
+    references: [product.id],
+  }),
+  repo: one(productRepo, {
+    fields: [card.repoId],
+    references: [productRepo.id],
+  }),
+}));
+
+/* ---- Cofre de acessos --------------------------------------------------- */
+
+export type AccessTipo = "sistema" | "infra" | "banco" | "plataforma" | "email";
+export type AccessAmbiente = "producao" | "homologacao" | "geral";
+export type AccessAction = "created" | "viewed" | "copied" | "rotated";
+
+export const access = pgTable(
+  "access",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    productId: text("product_id")
+      .notNull()
+      .references(() => product.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    tipo: text("tipo").$type<AccessTipo>().notNull(),
+    ambiente: text("ambiente").$type<AccessAmbiente>().notNull(),
+    login: text("login").notNull(),
+    // Segredos cifrados (AES-256-GCM). NUNCA selecionar em query de página —
+    // só dentro de getSecret (cofre/actions.ts).
+    passwordEnc: text("password_enc").notNull(),
+    totpCodesEnc: text("totp_codes_enc"),
+    notes: text("notes"),
+    createdById: text("created_by_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    rotatedAt: timestamp("rotated_at").defaultNow().notNull(),
+    rotatedById: text("rotated_by_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [index("access_productId_idx").on(table.productId)],
+);
+
+export const accessEvent = pgTable(
+  "access_event",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    accessId: text("access_id")
+      .notNull()
+      .references(() => access.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    action: text("action").$type<AccessAction>().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("access_event_accessId_idx").on(table.accessId)],
+);
+
+export const accessRelations = relations(access, ({ one, many }) => ({
+  product: one(product, {
+    fields: [access.productId],
+    references: [product.id],
+  }),
+  createdBy: one(user, {
+    fields: [access.createdById],
+    references: [user.id],
+    relationName: "accessCreatedBy",
+  }),
+  rotatedBy: one(user, {
+    fields: [access.rotatedById],
+    references: [user.id],
+    relationName: "accessRotatedBy",
+  }),
+  events: many(accessEvent),
+}));
+
+export const accessEventRelations = relations(accessEvent, ({ one }) => ({
+  access: one(access, {
+    fields: [accessEvent.accessId],
+    references: [access.id],
+  }),
+  user: one(user, {
+    fields: [accessEvent.userId],
+    references: [user.id],
+    relationName: "accessEventUser",
+  }),
+}));
+
+export const productStageEventRelations = relations(
+  productStageEvent,
+  ({ one }) => ({
+    product: one(product, {
+      fields: [productStageEvent.productId],
+      references: [product.id],
+    }),
+  }),
+);

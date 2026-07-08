@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useOptimistic,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import {
   ChevronDownIcon,
-  ChevronRightIcon,
   CloseIcon,
   CopyIcon,
   ExternalIcon,
@@ -18,63 +23,87 @@ import {
   IconButton,
   RepoChip,
   SegmentedControl,
-  StatusPill,
   Stepper,
   TaskCard,
 } from "@/components/ui";
+import type { CardStatus } from "@/db/schema";
 import { cn } from "@/lib/cn";
 import {
-  boardFor,
-  type Card,
-  type Column,
-  type Product,
-  REPO_COLORS,
-  type RepoKey,
+  BOARD_COLUMNS,
+  displayCardId,
+  repoColor,
   STAGES,
-} from "@/lib/mock-data";
+  suggestBranch,
+} from "@/lib/product-constants";
+import {
+  addRepo,
+  createCard,
+  linkPr,
+  removeRepo,
+  setCardStatus,
+  setProductStage,
+  unlinkPr,
+  updateCard,
+} from "../actions";
+import { ProductHeader } from "./product-header";
 
 const CONTEXT_KEY = "atrios.productContextOpen";
-const STOPWORDS = new Set([
-  "de",
-  "do",
-  "da",
-  "dos",
-  "das",
-  "no",
-  "na",
-  "em",
-  "o",
-  "a",
-  "e",
-]);
 
-function suggestBranch(card: Card): string {
-  const words = card.title
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .split(/[^a-z0-9]+/)
-    .filter((w) => w && !STOPWORDS.has(w))
-    .slice(0, 2);
-  return [card.id.toLowerCase(), ...words].join("-");
+export interface BoardRepo {
+  id: string;
+  label: string;
+  name: string;
 }
 
-function nextCardId(code: string, columns: Column[]): string {
-  const max = columns
-    .flatMap((c) => c.cards)
-    .reduce((m, c) => Math.max(m, Number(c.id.split("-")[1]) || 0), 0);
-  return `${code}-${max + 1}`;
+export interface BoardCard {
+  id: string;
+  seq: number;
+  title: string;
+  description: string | null;
+  status: CardStatus;
+  repoId: string | null;
+  prNumber: number | null;
+  prUrl: string | null;
+  auto: boolean;
 }
 
-export function ProductBoard({ product }: { product: Product }) {
-  const stage = STAGES[product.stageIndex];
+export interface BoardProduct {
+  id: string;
+  name: string;
+  code: string;
+  stage: number;
+  description: string;
+  longDescription: string | null;
+  /** Data formatada em que o produto entrou em cada etapa (por índice). */
+  stageDates: (string | null)[];
+  repos: BoardRepo[];
+}
+
+export function ProductBoard({
+  product,
+  cards,
+  accessCount,
+}: {
+  product: BoardProduct;
+  cards: BoardCard[];
+  accessCount: number;
+}) {
   const [contextOpen, setContextOpen] = useState(true);
   const [view, setView] = useState("kanban");
-  const [columns, setColumns] = useState<Column[]>(() =>
-    boardFor(product.code),
-  );
   const [composing, setComposing] = useState(false);
-  const [selected, setSelected] = useState<Card | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Destaque "novo" é só desta sessão do browser (não persiste).
+  const [newIds, setNewIds] = useState<ReadonlySet<string>>(new Set());
+  const [, startTransition] = useTransition();
+  // Drag-and-drop do kanban (só nesta visão).
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<CardStatus | null>(null);
+  // Override otimista de status; a revalidação descarta ao trazer os props novos.
+  const [optimisticCards, moveCardOptimistic] = useOptimistic(
+    cards,
+    (state, { id, status }: { id: string; status: CardStatus }) =>
+      state.map((c) => (c.id === id ? { ...c, status } : c)),
+  );
 
   useEffect(() => {
     const saved = localStorage.getItem(CONTEXT_KEY);
@@ -87,60 +116,58 @@ export function ProductBoard({ product }: { product: Product }) {
     localStorage.setItem(CONTEXT_KEY, next ? "1" : "0");
   };
 
-  const createCard = (title: string, repo?: RepoKey) => {
-    setColumns((cols) =>
-      cols.map((c) =>
-        c.key === "todo"
-          ? {
-              ...c,
-              cards: [
-                {
-                  id: nextCardId(product.code, cols),
-                  title,
-                  repo,
-                  isNew: true,
-                },
-                ...c.cards,
-              ],
-            }
-          : c,
-      ),
-    );
-    setComposing(false);
+  const columns = BOARD_COLUMNS.map((col) => ({
+    ...col,
+    cards: optimisticCards.filter((c) => c.status === col.status),
+  }));
+  const selected = cards.find((c) => c.id === selectedId) ?? null;
+  const repoOf = (c: BoardCard) => product.repos.find((r) => r.id === c.repoId);
+  const nextSeq = cards.reduce((m, c) => Math.max(m, c.seq), 0) + 1;
+
+  const endDrag = () => {
+    setDraggingId(null);
+    setDragOverCol(null);
   };
 
-  const columnOf = (card: Card) =>
-    columns.find((c) => c.cards.some((x) => x.id === card.id)) ?? columns[0];
+  const dropOnColumn = (status: CardStatus, id: string) => {
+    endDrag();
+    if (!id) return;
+    const card = cards.find((c) => c.id === id);
+    if (!card || card.status === status) return; // mesma coluna: no-op
+    startTransition(async () => {
+      moveCardOptimistic({ id, status });
+      await setCardStatus(id, status);
+    });
+  };
+
+  const onCreateCard = (title: string, repoId?: string) => {
+    setComposing(false);
+    startTransition(async () => {
+      const result = await createCard(product.id, title, repoId);
+      if (result.id) {
+        const id = result.id;
+        setNewIds((prev) => new Set(prev).add(id));
+      }
+    });
+  };
+
+  const onStageClick = (index: number) => {
+    if (index === product.stage) return;
+    startTransition(async () => {
+      await setProductStage(product.id, index);
+    });
+  };
 
   return (
     <>
-      {/* breadcrumb */}
-      <div className="flex h-11 shrink-0 items-center gap-2 border-b border-line-subtle px-[22px]">
-        <span className="text-[12.5px] text-fg-6">Produtos</span>
-        <span className="text-fg-9">
-          <ChevronRightIcon />
-        </span>
-        <span className="text-[12.5px] text-fg-5">{product.name}</span>
-      </div>
-
-      {/* product header */}
-      <div className="shrink-0 border-b border-line-subtle px-[22px] pb-[18px] pt-[22px]">
-        <div className="flex items-center gap-[13px]">
-          <span
-            className="size-[11px] shrink-0 rounded-full"
-            style={{
-              background: product.color,
-              boxShadow: `0 0 12px ${product.color}88`,
-            }}
-          />
-          <h1 className="text-[25px] font-semibold tracking-[-0.02em] text-fg-hi">
-            {product.name}
-          </h1>
-          <span className="rounded-nav border border-line-strong bg-white/[0.06] px-[9px] py-0.5 font-mono text-xs font-semibold tracking-[0.04em] text-fg-4">
-            {product.code}
-          </span>
-          <StatusPill hue={stage.hue}>{stage.name}</StatusPill>
-          <div className="ml-auto" />
+      <ProductHeader
+        name={product.name}
+        code={product.code}
+        stage={product.stage}
+        cardCount={cards.length}
+        accessCount={accessCount}
+        active="cards"
+        actions={
           <Button variant="secondary" size="md" onClick={toggleContext}>
             Contexto
             <span
@@ -150,8 +177,8 @@ export function ProductBoard({ product }: { product: Product }) {
               <ChevronDownIcon />
             </span>
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* collapsible context panel */}
       {contextOpen && (
@@ -162,53 +189,24 @@ export function ProductBoard({ product }: { product: Product }) {
                 Descrição
               </div>
               <p className="max-w-[560px] text-[13.5px] leading-relaxed text-fg-4">
-                {product.longDesc ?? product.desc}
+                {product.longDescription ?? product.description}
               </p>
             </div>
-            <div className="min-w-[240px]">
-              <div className="mb-[9px] text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-8">
-                Repositórios
-              </div>
-              {product.repos.length > 0 ? (
-                <div className="flex flex-col gap-[7px]">
-                  {product.repos.map((r) => (
-                    <a
-                      key={r.name}
-                      href={`https://github.com/atrios/${r.name}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex h-[34px] items-center gap-[9px] rounded-field border border-[rgba(255,255,255,0.09)] bg-surface-1 px-[11px] transition-colors duration-200 hover:border-line-hover hover:bg-[#0e0f12]"
-                    >
-                      <span
-                        className="size-[7px] shrink-0 rounded-full"
-                        style={{ background: r.color }}
-                      />
-                      <span className="font-mono text-[12.5px] text-fg-2">
-                        <span className="text-fg-8">atrios/</span>
-                        {r.name}
-                      </span>
-                      <span className="ml-auto shrink-0 text-fg-7">
-                        <ExternalIcon />
-                      </span>
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <Button
-                  variant="dashed"
-                  size="lg"
-                  icon={<PlusIcon size={12} />}
-                >
-                  Adicionar repositório
-                </Button>
-              )}
-            </div>
+            <RepoSection product={product} />
           </div>
           <div>
             <div className="mb-4 text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-8">
               Etapa
             </div>
-            <Stepper steps={STAGES} current={product.stageIndex} />
+            <Stepper
+              steps={STAGES.map((s, i) => ({
+                name: s.name,
+                color: s.color,
+                date: product.stageDates[i] ?? undefined,
+              }))}
+              current={product.stage}
+              onStepClick={onStageClick}
+            />
           </div>
         </div>
       )}
@@ -230,8 +228,20 @@ export function ProductBoard({ product }: { product: Product }) {
           <div className="flex min-h-0 flex-1 gap-3.5">
             {columns.map((col) => (
               <div
-                key={col.key}
+                key={col.status}
                 className="flex min-w-0 flex-1 flex-col gap-[11px]"
+                onDragOver={(e) => {
+                  // sempre preventDefault no alvo: garante que o drop seja aceito
+                  // mesmo antes de o estado draggingId ter feito flush.
+                  e.preventDefault();
+                  if (dragOverCol !== col.status) setDragOverCol(col.status);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  // id do dataTransfer é confiável no drop; estado é fallback.
+                  const id = e.dataTransfer.getData("text/plain") || draggingId;
+                  if (id) dropOnColumn(col.status, id);
+                }}
               >
                 <div className="flex shrink-0 items-center gap-2 px-[3px]">
                   <span
@@ -241,10 +251,8 @@ export function ProductBoard({ product }: { product: Product }) {
                   <span className="whitespace-nowrap text-[13px] font-semibold text-fg-3">
                     {col.title}
                   </span>
-                  <span className="text-xs text-fg-9">
-                    {col.total ?? col.cards.length}
-                  </span>
-                  {col.key === "todo" && (
+                  <span className="text-xs text-fg-9">{col.cards.length}</span>
+                  {col.status === "todo" && (
                     <IconButton
                       aria-label="Novo card"
                       size={22}
@@ -255,32 +263,49 @@ export function ProductBoard({ product }: { product: Product }) {
                     </IconButton>
                   )}
                 </div>
-                <div className="flex flex-col gap-2 overflow-auto">
-                  {col.key === "todo" && composing && (
+                <div
+                  className={cn(
+                    "flex flex-1 flex-col gap-2 overflow-auto rounded-field border border-transparent transition-colors duration-150",
+                    dragOverCol === col.status &&
+                      draggingId &&
+                      "border-dashed border-primary/45 bg-surface-selected/40",
+                  )}
+                >
+                  {col.status === "todo" && composing && (
                     <CardComposer
-                      nextId={nextCardId(product.code, columns)}
-                      onCreate={createCard}
+                      nextId={displayCardId(product.code, nextSeq)}
+                      repos={product.repos}
+                      onCreate={onCreateCard}
                       onCancel={() => setComposing(false)}
                     />
                   )}
                   {col.cards.map((card) => (
                     <TaskCard
                       key={card.id}
-                      id={card.id}
+                      id={displayCardId(product.code, card.seq)}
                       title={card.title}
-                      repo={card.repo}
-                      prNum={card.pr}
+                      repo={repoOf(card)?.label}
+                      prNum={card.prNumber ?? undefined}
                       auto={card.auto}
-                      isNew={card.isNew}
+                      isNew={newIds.has(card.id)}
+                      draggable
+                      onDragStart={(e) => {
+                        // estado primeiro: é a fonte de verdade do drop (dataTransfer é só cosmético)
+                        setDraggingId(card.id);
+                        e.dataTransfer.effectAllowed = "move";
+                        e.dataTransfer.setData("text/plain", card.id);
+                      }}
+                      onDragEnd={endDrag}
                       className={cn(
-                        "cursor-pointer",
-                        card.isNew &&
+                        "cursor-grab active:cursor-grabbing",
+                        draggingId === card.id && "opacity-40",
+                        newIds.has(card.id) &&
                           "border-primary/40 bg-surface-selected shadow-glow-new",
                       )}
-                      onClick={() => setSelected(card)}
+                      onClick={() => setSelectedId(card.id)}
                     />
                   ))}
-                  {col.key === "todo" && !composing && (
+                  {col.status === "todo" && !composing && (
                     <button
                       type="button"
                       onClick={() => setComposing(true)}
@@ -297,7 +322,7 @@ export function ProductBoard({ product }: { product: Product }) {
         ) : (
           <div className="min-h-0 flex-1 overflow-auto rounded-[10px] border border-[rgba(255,255,255,0.07)] bg-surface-1">
             {columns.map((col) => (
-              <div key={col.key}>
+              <div key={col.status}>
                 <div className="flex items-center gap-[9px] border-b border-line-subtle bg-surface-4 px-4 py-[9px]">
                   <span className="text-fg-7">
                     <ChevronDownIcon size={12} />
@@ -310,9 +335,9 @@ export function ProductBoard({ product }: { product: Product }) {
                     {col.title}
                   </span>
                   <span className="rounded-pill bg-white/[0.06] px-[7px] text-[11px] font-semibold text-fg-6">
-                    {col.total ?? col.cards.length}
+                    {col.cards.length}
                   </span>
-                  {col.key === "todo" && (
+                  {col.status === "todo" && (
                     <IconButton
                       aria-label="Novo card"
                       size={22}
@@ -330,7 +355,7 @@ export function ProductBoard({ product }: { product: Product }) {
                   <button
                     key={card.id}
                     type="button"
-                    onClick={() => setSelected(card)}
+                    onClick={() => setSelectedId(card.id)}
                     className="flex w-full cursor-pointer items-center gap-3 border-b border-line-subtle py-2.5 pl-[18px] pr-4 text-left transition-colors duration-200 hover:bg-white/[0.022]"
                   >
                     <span
@@ -338,7 +363,7 @@ export function ProductBoard({ product }: { product: Product }) {
                       style={{ background: col.color }}
                     />
                     <span className="min-w-[58px] shrink-0 font-mono text-[11.5px] text-fg-7">
-                      {card.id}
+                      {displayCardId(product.code, card.seq)}
                     </span>
                     <span className="min-w-0 flex-1 truncate text-[13px] text-fg-2">
                       {card.title}
@@ -352,15 +377,20 @@ export function ProductBoard({ product }: { product: Product }) {
                         auto
                       </Badge>
                     )}
-                    {card.repo && <RepoChip name={card.repo} />}
-                    {card.pr && (
+                    {repoOf(card) && (
+                      <RepoChip
+                        name={repoOf(card)?.label}
+                        color={repoColor(repoOf(card)?.label ?? "")}
+                      />
+                    )}
+                    {card.prNumber && (
                       <Badge tone="neutral" mono icon={<GitGraphIcon />}>
-                        #{card.pr}
+                        #{card.prNumber}
                       </Badge>
                     )}
                   </button>
                 ))}
-                {col.key === "todo" && (
+                {col.status === "todo" && (
                   <button
                     type="button"
                     onClick={() => {
@@ -381,12 +411,118 @@ export function ProductBoard({ product }: { product: Product }) {
 
       {selected && (
         <CardPanel
+          key={selected.id}
           card={selected}
-          column={columnOf(selected)}
-          onClose={() => setSelected(null)}
+          product={product}
+          onClose={() => setSelectedId(null)}
         />
       )}
     </>
+  );
+}
+
+/* ---- Repositórios (painel de contexto) --------------------------------- */
+
+function RepoSection({ product }: { product: BoardProduct }) {
+  const [adding, setAdding] = useState(false);
+  const [label, setLabel] = useState("");
+  const [name, setName] = useState("");
+  const [pending, startTransition] = useTransition();
+
+  const submit = () => {
+    if (!label.trim() || !name.trim() || pending) return;
+    startTransition(async () => {
+      const result = await addRepo(product.id, label, name);
+      if (!result.error) {
+        setLabel("");
+        setName("");
+        setAdding(false);
+      }
+    });
+  };
+
+  return (
+    <div className="min-w-[240px]">
+      <div className="mb-[9px] text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-8">
+        Repositórios
+      </div>
+      <div className="flex flex-col gap-[7px]">
+        {product.repos.map((r) => (
+          <div
+            key={r.id}
+            className="group flex h-[34px] items-center gap-[9px] rounded-field border border-[rgba(255,255,255,0.09)] bg-surface-1 pl-[11px] pr-1.5 transition-colors duration-200 hover:border-line-hover hover:bg-[#0e0f12]"
+          >
+            <span
+              className="size-[7px] shrink-0 rounded-full"
+              style={{ background: repoColor(r.label) }}
+            />
+            <a
+              href={`https://github.com/atrios/${r.name}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex min-w-0 flex-1 items-center gap-[9px] font-mono text-[12.5px] text-fg-2"
+            >
+              <span className="truncate">
+                <span className="text-fg-8">atrios/</span>
+                {r.name}
+              </span>
+              <span className="ml-auto shrink-0 text-fg-7">
+                <ExternalIcon />
+              </span>
+            </a>
+            <IconButton
+              aria-label={`Remover repositório ${r.name}`}
+              size={22}
+              className="opacity-0 transition-opacity duration-200 hover:text-danger group-hover:opacity-100"
+              onClick={() =>
+                startTransition(async () => {
+                  await removeRepo(r.id);
+                })
+              }
+            >
+              <CloseIcon />
+            </IconButton>
+          </div>
+        ))}
+        {adding ? (
+          <div className="flex items-center gap-1.5">
+            <input
+              aria-label="Papel do repositório"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="papel"
+              className="h-[30px] w-[88px] shrink-0 rounded-nav border border-line-field-strong bg-surface-1 px-2 text-xs text-fg-2 outline-none placeholder:text-fg-8"
+            />
+            <div className="flex h-[30px] min-w-0 flex-1 items-center rounded-nav border border-line-field-strong bg-surface-1 px-2 font-mono text-xs text-fg-2">
+              <span className="text-fg-8">atrios/</span>
+              <input
+                aria-label="Nome do repositório"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") submit();
+                  if (e.key === "Escape") setAdding(false);
+                }}
+                className="w-full min-w-0 bg-transparent outline-none"
+              />
+            </div>
+            <Button size="sm" onClick={submit} disabled={pending}>
+              Salvar
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="dashed"
+            size={product.repos.length ? "md" : "lg"}
+            icon={<PlusIcon size={12} />}
+            className="self-start"
+            onClick={() => setAdding(true)}
+          >
+            Adicionar repositório
+          </Button>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -394,21 +530,23 @@ export function ProductBoard({ product }: { product: Product }) {
 
 function CardComposer({
   nextId,
+  repos,
   onCreate,
   onCancel,
 }: {
   nextId: string;
-  onCreate: (title: string, repo?: RepoKey) => void;
+  repos: BoardRepo[];
+  onCreate: (title: string, repoId?: string) => void;
   onCancel: () => void;
 }) {
   const [title, setTitle] = useState("");
-  const [repo, setRepo] = useState<RepoKey | "">("");
+  const [repoId, setRepoId] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => inputRef.current?.focus(), []);
 
   const submit = () => {
-    if (title.trim()) onCreate(title.trim(), repo || undefined);
+    if (title.trim()) onCreate(title.trim(), repoId || undefined);
   };
 
   return (
@@ -427,14 +565,14 @@ function CardComposer({
       <div className="flex items-center gap-2">
         <select
           aria-label="Repositório"
-          value={repo}
-          onChange={(e) => setRepo(e.target.value as RepoKey | "")}
+          value={repoId}
+          onChange={(e) => setRepoId(e.target.value)}
           className="h-[27px] cursor-pointer rounded-nav border border-line-field-strong bg-surface-1 px-[9px] text-xs text-fg-3 outline-none"
         >
           <option value="">sem repo</option>
-          {(Object.keys(REPO_COLORS) as RepoKey[]).map((r) => (
-            <option key={r} value={r}>
-              {r}
+          {repos.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.label}
             </option>
           ))}
         </select>
@@ -461,19 +599,48 @@ function CardComposer({
 
 function CardPanel({
   card,
-  column,
+  product,
   onClose,
 }: {
-  card: Card;
-  column: Column;
+  card: BoardCard;
+  product: BoardProduct;
   onClose: () => void;
 }) {
-  const branch = suggestBranch(card);
+  const displayId = displayCardId(product.code, card.seq);
+  const branch = suggestBranch(displayId, card.title);
+  const column =
+    BOARD_COLUMNS.find((c) => c.status === card.status) ?? BOARD_COLUMNS[0];
+
+  const [title, setTitle] = useState(card.title);
+  const [description, setDescription] = useState(card.description ?? "");
+  const [prInput, setPrInput] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  const run = (fn: () => Promise<{ error?: string }>) => {
+    startTransition(async () => {
+      const result = await fn();
+      setError(result.error ?? null);
+    });
+  };
+
+  const saveTitle = () => {
+    if (title.trim() && title.trim() !== card.title)
+      run(() => updateCard(card.id, { title }));
+    else setTitle(card.title);
+  };
+
+  const saveDescription = () => {
+    if (description.trim() !== (card.description ?? ""))
+      run(() => updateCard(card.id, { description }));
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <button
@@ -485,15 +652,27 @@ function CardPanel({
       <div
         className="relative w-[720px] max-w-[92vw] overflow-hidden rounded-panel border border-white/10 bg-surface-card shadow-modal"
         role="dialog"
-        aria-label={card.id}
+        aria-label={displayId}
       >
         <div className="flex items-center gap-2.5 border-b border-line px-[18px] py-3.5">
           <span className="rounded-chip bg-white/5 px-[7px] py-0.5 font-mono text-xs text-fg-6">
-            {card.id}
+            {displayId}
           </span>
-          <StatusPill hue={column.hue} tinted={false}>
-            {column.title}
-          </StatusPill>
+          <select
+            aria-label="Status do card"
+            value={card.status}
+            onChange={(e) =>
+              run(() => setCardStatus(card.id, e.target.value as CardStatus))
+            }
+            className="h-[27px] cursor-pointer rounded-pill border border-line-field-strong bg-surface-1 px-[9px] text-xs font-medium outline-none"
+            style={{ color: column.color }}
+          >
+            {BOARD_COLUMNS.map((c) => (
+              <option key={c.status} value={c.status}>
+                {c.title}
+              </option>
+            ))}
+          </select>
           <div className="ml-auto" />
           <IconButton aria-label="Fechar" onClick={onClose}>
             <CloseIcon size={16} />
@@ -501,36 +680,61 @@ function CardPanel({
         </div>
         <div className="flex">
           <div className="min-w-0 flex-1 border-r border-line px-5 py-[22px]">
-            <div className="mb-[18px] text-[19px] font-semibold leading-[1.3] tracking-[-0.01em] text-fg-hi">
-              {card.title}
-            </div>
+            <input
+              aria-label="Título do card"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={saveTitle}
+              onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+              className="mb-[18px] w-full bg-transparent text-[19px] font-semibold leading-[1.3] tracking-[-0.01em] text-fg-hi outline-none"
+            />
             <div className="mb-[9px] text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-8">
               Descrição
             </div>
-            <p className="text-[13.5px] leading-[1.65] text-fg-4">
-              {card.desc ?? <span className="text-fg-8">Sem descrição.</span>}
-            </p>
+            <textarea
+              aria-label="Descrição do card"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              onBlur={saveDescription}
+              placeholder="Sem descrição."
+              rows={6}
+              className="w-full resize-none bg-transparent text-[13.5px] leading-[1.65] text-fg-4 outline-none placeholder:text-fg-8"
+            />
           </div>
           <div className="flex w-[264px] shrink-0 flex-col gap-5 px-5 py-[22px]">
             <div className="flex flex-col gap-2">
               <span className="text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-8">
                 Repositório
               </span>
-              <div className="flex h-9 items-center gap-2 rounded-field border border-line-field bg-surface-1 px-[11px] text-[13px] text-fg-2">
-                {card.repo ? (
-                  <>
-                    <span
-                      className="size-[7px] shrink-0 rounded-full"
-                      style={{ background: REPO_COLORS[card.repo] }}
-                    />
-                    {card.repo}
-                  </>
-                ) : (
-                  <span className="text-fg-8">sem repo</span>
+              <div className="flex h-9 items-center gap-2 rounded-field border border-line-field bg-surface-1 px-[11px]">
+                {card.repoId && (
+                  <span
+                    className="size-[7px] shrink-0 rounded-full"
+                    style={{
+                      background: repoColor(
+                        product.repos.find((r) => r.id === card.repoId)
+                          ?.label ?? "",
+                      ),
+                    }}
+                  />
                 )}
-                <span className="ml-auto text-fg-7">
-                  <ChevronDownIcon size={13} />
-                </span>
+                <select
+                  aria-label="Repositório do card"
+                  value={card.repoId ?? ""}
+                  onChange={(e) =>
+                    run(() =>
+                      updateCard(card.id, { repoId: e.target.value || null }),
+                    )
+                  }
+                  className="w-full cursor-pointer bg-transparent text-[13px] text-fg-2 outline-none"
+                >
+                  <option value="">sem repo</option>
+                  {product.repos.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="flex flex-col gap-2">
@@ -555,32 +759,64 @@ function CardPanel({
               <span className="text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-8">
                 Pull Request
               </span>
-              {card.pr ? (
-                <a
-                  href={`https://github.com/atrios/pulls/${card.pr}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-2 rounded-field border border-status-done/25 bg-status-done/10 px-[11px] py-[9px]"
-                >
-                  <span className="text-status-done">
-                    <GitGraphIcon size={14} />
-                  </span>
-                  <span className="font-mono text-[12.5px] text-fg-2">
-                    #{card.pr}
-                  </span>
-                  <span className="text-[11px] text-status-done">aberto</span>
-                  <span className="ml-auto text-fg-7">
-                    <ExternalIcon />
-                  </span>
-                </a>
+              {card.prNumber ? (
+                <div className="flex items-center gap-2 rounded-field border border-status-done/25 bg-status-done/10 py-[5px] pl-[11px] pr-1.5">
+                  <a
+                    href={card.prUrl ?? "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex min-w-0 flex-1 items-center gap-2"
+                  >
+                    <span className="text-status-done">
+                      <GitGraphIcon size={14} />
+                    </span>
+                    <span className="font-mono text-[12.5px] text-fg-2">
+                      #{card.prNumber}
+                    </span>
+                    <span className="ml-auto shrink-0 text-fg-7">
+                      <ExternalIcon />
+                    </span>
+                  </a>
+                  <IconButton
+                    aria-label="Remover vínculo do PR"
+                    size={22}
+                    className="hover:text-danger"
+                    onClick={() => run(() => unlinkPr(card.id))}
+                  >
+                    <CloseIcon />
+                  </IconButton>
+                </div>
               ) : (
-                <div className="flex items-center rounded-field border border-dashed border-line-hover px-[11px] py-[9px] text-xs text-fg-7">
-                  Nenhum PR vinculado
+                <div className="flex items-center gap-1.5">
+                  <input
+                    aria-label="Link do PR"
+                    value={prInput}
+                    onChange={(e) => setPrInput(e.target.value)}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" &&
+                      prInput.trim() &&
+                      run(() => linkPr(card.id, prInput))
+                    }
+                    placeholder="Colar link do PR"
+                    className="h-8 min-w-0 flex-1 rounded-field border border-dashed border-line-hover bg-transparent px-[11px] text-xs text-fg-3 outline-none placeholder:text-fg-7"
+                  />
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={pending || !prInput.trim()}
+                    onClick={() => run(() => linkPr(card.id, prInput))}
+                  >
+                    Vincular
+                  </Button>
                 </div>
               )}
+              {error && (
+                <span className="text-[11px] leading-[1.4] text-danger">
+                  {error}
+                </span>
+              )}
               <span className="text-[11px] leading-[1.4] text-fg-9">
-                Vinculado automaticamente. Você também pode colar um link
-                manualmente.
+                Cole o link de um PR do GitHub para vincular ao card.
               </span>
             </div>
           </div>

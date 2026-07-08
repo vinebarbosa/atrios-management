@@ -1,6 +1,8 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { and, count, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
@@ -10,6 +12,12 @@ import { auth, pendingInvite } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 
 const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias
+const INVITE_TTL_DAYS = Math.round(INVITE_TTL_MS / (24 * 60 * 60 * 1000));
+
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Administrador",
+  member: "Membro",
+};
 
 type Result = { error?: string };
 
@@ -29,12 +37,31 @@ async function adminCount() {
   return value;
 }
 
-async function sendInviteEmail(email: string, token: string) {
+async function sendInviteEmail(opts: {
+  email: string;
+  token: string;
+  role: string;
+  inviterName: string;
+}) {
   const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+  const inviteUrl = `${base}/convite/${opts.token}`;
+  const roleLabel = ROLE_LABELS[opts.role] ?? opts.role;
+
+  const template = await readFile(
+    join(process.cwd(), "public", "emails", "invite.html"),
+    "utf8",
+  );
+  const html = template
+    .replaceAll("{{inviterName}}", opts.inviterName)
+    .replaceAll("{{roleLabel}}", roleLabel)
+    .replaceAll("{{inviteUrl}}", inviteUrl)
+    .replaceAll("{{expiresInDays}}", String(INVITE_TTL_DAYS));
+
   await sendEmail({
-    to: email,
+    to: opts.email,
     subject: "Convite — Átrios Management",
-    text: `Você foi convidado(a) para o time da Átrios: ${base}/convite/${token}`,
+    text: `${opts.inviterName} convidou você para o time da Átrios (${roleLabel}). Aceite em: ${inviteUrl}`,
+    html,
   });
 }
 
@@ -63,7 +90,12 @@ export async function inviteMember(
     token,
     expiresAt: new Date(Date.now() + INVITE_TTL_MS),
   });
-  await sendInviteEmail(email, token);
+  await sendInviteEmail({
+    email,
+    token,
+    role,
+    inviterName: session.user.name ?? "Um administrador",
+  });
   revalidatePath("/time");
   return {};
 }
@@ -73,6 +105,7 @@ export async function resendInvite(inviteId: string): Promise<Result> {
     return { error: "Apenas admins podem reenviar convites." };
   const inv = await db.query.invite.findFirst({
     where: eq(schema.invite.id, inviteId),
+    with: { invitedBy: true },
   });
   if (!inv || inv.acceptedAt) return { error: "Convite não está pendente." };
 
@@ -81,7 +114,12 @@ export async function resendInvite(inviteId: string): Promise<Result> {
     .update(schema.invite)
     .set({ token, expiresAt: new Date(Date.now() + INVITE_TTL_MS) })
     .where(eq(schema.invite.id, inviteId));
-  await sendInviteEmail(inv.email, token);
+  await sendInviteEmail({
+    email: inv.email,
+    token,
+    role: inv.role,
+    inviterName: inv.invitedBy?.name ?? "Um administrador",
+  });
   revalidatePath("/time");
   return {};
 }

@@ -2,16 +2,27 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ArchLogo, GridIcon, SignOutIcon, UsersIcon } from "@/components/icons";
+import {
+  ArchLogo,
+  GridIcon,
+  KeyIcon,
+  SignOutIcon,
+  UsersIcon,
+} from "@/components/icons";
 import { Avatar, SidebarItem } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/cn";
-import { PRODUCTS } from "@/lib/mock-data";
 
 export interface SidebarUser {
   name: string;
   email: string;
   role: "admin" | "member";
+}
+
+export interface SidebarProduct {
+  name: string;
+  code: string;
+  color: string;
 }
 
 function initialsOf(name: string) {
@@ -26,7 +37,13 @@ function initialsOf(name: string) {
   );
 }
 
-export function AppSidebar({ user }: { user: SidebarUser }) {
+export function AppSidebar({
+  user,
+  products,
+}: {
+  user: SidebarUser;
+  products: SidebarProduct[];
+}) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -58,6 +75,10 @@ export function AppSidebar({ user }: { user: SidebarUser }) {
         <GridIcon />
         Produtos
       </Link>
+      <Link href="/cofre" className={navClass(pathname.startsWith("/cofre"))}>
+        <KeyIcon />
+        Cofre
+      </Link>
       <Link href="/time" className={navClass(pathname === "/time")}>
         <UsersIcon />
         Time
@@ -65,7 +86,7 @@ export function AppSidebar({ user }: { user: SidebarUser }) {
       <div className="px-2 pb-1.5 pt-4 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-fg-9">
         Produtos
       </div>
-      {PRODUCTS.map((p) => (
+      {products.map((p) => (
         <Link key={p.code} href={`/produtos/${p.code}`}>
           <SidebarItem
             label={p.name}

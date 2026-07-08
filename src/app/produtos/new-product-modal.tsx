@@ -1,18 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { CloseIcon, PlusIcon } from "@/components/icons";
 import { Button, IconButton, Input } from "@/components/ui";
-
-// Strip accents + non-alphanumerics for repo-name suggestions.
-function slugify(s: string): string {
-  return s
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
+import { slugify, suggestCode } from "@/lib/product-constants";
+import { createProduct } from "./actions";
 
 interface RepoRow {
   label: string;
@@ -27,16 +19,38 @@ const DEFAULT_REPOS = (slug: string): RepoRow[] => [
 
 export function NewProductModal() {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("Pórtico");
-  const [code, setCode] = useState("POR");
+  const [name, setName] = useState("");
+  const [code, setCode] = useState("");
   const [codeDirty, setCodeDirty] = useState(false);
-  const [repos, setRepos] = useState<RepoRow[]>(DEFAULT_REPOS("portico"));
+  const [repos, setRepos] = useState<RepoRow[]>(DEFAULT_REPOS(""));
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const reset = () => {
+    setName("");
+    setCode("");
+    setCodeDirty(false);
+    setRepos(DEFAULT_REPOS(""));
+    setError(null);
+  };
 
   const onNameChange = (v: string) => {
     setName(v);
-    if (!codeDirty)
-      setCode(slugify(v).replace(/-/g, "").slice(0, 3).toUpperCase());
+    if (!codeDirty) setCode(suggestCode(v));
     setRepos(DEFAULT_REPOS(slugify(v)).slice(0, repos.length || 1));
+  };
+
+  const submit = () => {
+    if (pending) return;
+    startTransition(async () => {
+      const result = await createProduct({ name, code, repos });
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      reset();
+      setOpen(false);
+    });
   };
 
   return (
@@ -91,13 +105,15 @@ export function NewProductModal() {
                       value={code}
                       onChange={(e) => {
                         setCodeDirty(true);
-                        setCode(e.target.value.toUpperCase().slice(0, 3));
+                        setCode(e.target.value.toUpperCase().slice(0, 4));
                       }}
                     />
                   </div>
                   <span className="text-xs leading-[1.4] text-fg-8">
                     Sugerido a partir do nome · usado nos ids{" "}
-                    <span className="font-mono text-fg-6">{code}-12</span>
+                    <span className="font-mono text-fg-6">
+                      {code || "ABC"}-12
+                    </span>
                   </span>
                 </div>
               </div>
@@ -107,7 +123,7 @@ export function NewProductModal() {
                     Repositórios
                   </span>
                   <span className="text-[11px] text-fg-9">
-                    serão criados no GitHub ao salvar
+                    apenas registro — link para o GitHub
                   </span>
                 </div>
                 {repos.map((r, i) => (
@@ -170,6 +186,9 @@ export function NewProductModal() {
                   Adicionar repositório
                 </Button>
               </div>
+              {error && (
+                <p className="text-xs leading-[1.4] text-danger">{error}</p>
+              )}
             </div>
             <div className="flex justify-end gap-[9px] border-t border-line px-[18px] py-3.5">
               <Button
@@ -179,8 +198,8 @@ export function NewProductModal() {
               >
                 Cancelar
               </Button>
-              <Button size="lg" onClick={() => setOpen(false)}>
-                Criar produto
+              <Button size="lg" onClick={submit} disabled={pending}>
+                {pending ? "Criando…" : "Criar produto"}
               </Button>
             </div>
           </div>
