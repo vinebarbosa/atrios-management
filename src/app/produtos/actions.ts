@@ -28,12 +28,14 @@ function isUniqueViolation(e: unknown): boolean {
 
 export async function createProduct(input: {
   name: string;
+  description?: string;
   code: string;
   repos: { label: string; name: string }[];
 }): Promise<Result> {
   if (!(await requireSession())) return { error: "Sessão expirada." };
 
   const name = input.name.trim();
+  const description = input.description?.trim() ?? "";
   const code = input.code.trim().toUpperCase();
   if (!name) return { error: "Informe o nome do produto." };
   if (!PRODUCT_CODE_RE.test(code))
@@ -46,7 +48,7 @@ export async function createProduct(input: {
     await db.transaction(async (tx) => {
       const [row] = await tx
         .insert(schema.product)
-        .values({ name, code, description: "" })
+        .values({ name, code, description })
         .returning();
       await tx
         .insert(schema.productStageEvent)

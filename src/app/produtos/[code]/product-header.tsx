@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
-import { ChevronRightIcon } from "@/components/icons";
-import { StatusPill } from "@/components/ui";
+import { useEffect, useState } from "react";
+import { ChevronDownIcon, ChevronRightIcon } from "@/components/icons";
+import { Button, StatusPill } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { STAGES } from "@/lib/product-constants";
+import { ContextPanel, type ContextProduct } from "./product-context";
+
+const CONTEXT_KEY = "atrios.productContextOpen";
 
 export interface ProductHeaderProps {
   name: string;
@@ -14,11 +17,11 @@ export interface ProductHeaderProps {
   cardCount: number;
   accessCount: number;
   active: "cards" | "acessos";
-  /** Slot à direita do cabeçalho (ex.: botão Contexto na aba Cards). */
-  actions?: ReactNode;
+  /** Detalhes do produto, exibidos entre o nome e as abas (toggle Contexto). */
+  context?: ContextProduct;
 }
 
-/** Breadcrumb + identidade do produto + abas Cards|Acessos (frames 04 e 13a). */
+/** Breadcrumb + identidade do produto + contexto + abas Cards|Acessos. */
 export function ProductHeader({
   name,
   code,
@@ -26,9 +29,22 @@ export function ProductHeader({
   cardCount,
   accessCount,
   active,
-  actions,
+  context,
 }: ProductHeaderProps) {
   const stage = STAGES[stageIndex] ?? STAGES[0];
+  const [contextOpen, setContextOpen] = useState(true);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(CONTEXT_KEY);
+    if (saved !== null) setContextOpen(saved === "1");
+  }, []);
+
+  const toggleContext = () => {
+    const next = !contextOpen;
+    setContextOpen(next);
+    localStorage.setItem(CONTEXT_KEY, next ? "1" : "0");
+  };
+
   const tabs = [
     {
       key: "cards",
@@ -60,7 +76,7 @@ export function ProductHeader({
         <span className="text-[12.5px] text-fg-5">{name}</span>
       </div>
 
-      {/* product header + tabs */}
+      {/* product header + contexto + tabs */}
       <div className="shrink-0 border-b border-line-subtle px-[22px] pt-[22px]">
         <div className="flex items-center gap-[13px]">
           <span
@@ -78,8 +94,19 @@ export function ProductHeader({
           </span>
           <StatusPill hue={stage.hue}>{stage.name}</StatusPill>
           <div className="ml-auto" />
-          {actions}
+          {context && (
+            <Button variant="secondary" size="md" onClick={toggleContext}>
+              Contexto
+              <span
+                className="transition-transform duration-200"
+                style={{ transform: contextOpen ? "none" : "rotate(-90deg)" }}
+              >
+                <ChevronDownIcon />
+              </span>
+            </Button>
+          )}
         </div>
+        {context && contextOpen && <ContextPanel product={context} />}
         <div className="mt-4 flex items-end gap-5">
           {tabs.map((tab) => (
             <Link

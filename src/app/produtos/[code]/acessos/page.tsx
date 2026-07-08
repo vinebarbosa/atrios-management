@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/db";
 import { card } from "@/db/schema";
 import { auth } from "@/lib/auth";
+import { formatStageDate, STAGES } from "@/lib/product-constants";
 import { accessRowsForProduct, productOptions } from "../../../cofre/queries";
 import { ProductHeader } from "../product-header";
 import { AccessTab } from "./access-tab";
@@ -16,7 +17,10 @@ export default async function ProductAccessPage({
   const { code } = await params;
   const product = await db.query.product.findFirst({
     where: (p, { eq: eqp }) => eqp(p.code, code.toUpperCase()),
-    columns: { id: true, name: true, code: true, stage: true },
+    with: {
+      repos: true,
+      stageEvents: { orderBy: (e, { asc }) => asc(e.enteredAt) },
+    },
   });
   if (!product) notFound();
 
@@ -30,6 +34,13 @@ export default async function ProductAccessPage({
     db.$count(card, eq(card.productId, product.id)),
   ]);
 
+  // Data mais recente em que o produto entrou em cada etapa.
+  const stageDates: (string | null)[] = STAGES.map(() => null);
+  for (const e of product.stageEvents) {
+    if (e.stage >= 0 && e.stage < stageDates.length)
+      stageDates[e.stage] = formatStageDate(e.enteredAt);
+  }
+
   return (
     <>
       <ProductHeader
@@ -39,6 +50,18 @@ export default async function ProductAccessPage({
         cardCount={cardCount}
         accessCount={accesses.length}
         active="acessos"
+        context={{
+          id: product.id,
+          stage: product.stage,
+          description: product.description,
+          longDescription: product.longDescription,
+          stageDates,
+          repos: product.repos.map((r) => ({
+            id: r.id,
+            label: r.label,
+            name: r.name,
+          })),
+        }}
       />
       <AccessTab
         productId={product.id}

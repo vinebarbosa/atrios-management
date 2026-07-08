@@ -20,6 +20,7 @@ const DEFAULT_REPOS = (slug: string): RepoRow[] => [
 export function NewProductModal() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [code, setCode] = useState("");
   const [codeDirty, setCodeDirty] = useState(false);
   const [repos, setRepos] = useState<RepoRow[]>(DEFAULT_REPOS(""));
@@ -28,6 +29,7 @@ export function NewProductModal() {
 
   const reset = () => {
     setName("");
+    setDescription("");
     setCode("");
     setCodeDirty(false);
     setRepos(DEFAULT_REPOS(""));
@@ -43,7 +45,7 @@ export function NewProductModal() {
   const submit = () => {
     if (pending) return;
     startTransition(async () => {
-      const result = await createProduct({ name, code, repos });
+      const result = await createProduct({ name, description, code, repos });
       if (result.error) {
         setError(result.error);
         return;
@@ -86,6 +88,22 @@ export function NewProductModal() {
                   size="lg"
                   value={name}
                   onChange={(e) => onNameChange(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-[7px]">
+                <label
+                  htmlFor="np-description"
+                  className="text-xs font-medium text-fg-5"
+                >
+                  Descrição
+                </label>
+                <textarea
+                  id="np-description"
+                  rows={3}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="O que é este produto?"
+                  className="w-full resize-none rounded-field border border-line-field bg-surface-1 px-3 py-2 text-sm leading-[1.5] text-fg-2 outline-none transition-colors duration-200 placeholder:text-fg-8 focus:border-primary/40"
                 />
               </div>
               <div className="flex flex-col gap-[7px]">
