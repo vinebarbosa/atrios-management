@@ -187,6 +187,7 @@ export const card = pgTable(
     prNumber: integer("pr_number"),
     prUrl: text("pr_url"),
     auto: boolean("auto").default(false).notNull(),
+    archived: boolean("archived").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()

@@ -586,3 +586,49 @@ export function UploadIcon({ size = 20 }: IconProps) {
     </svg>
   );
 }
+
+export function TrashIcon({ size = 14 }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      aria-hidden="true"
+    >
+      <path
+        d="M3 4.5h10M6.3 4.5v-1c0-.5.4-1 1-1h1.4c.6 0 1 .5 1 1v1"
+        strokeLinecap="round"
+      />
+      <path
+        d="M4 4.5 4.6 13c0 .6.5 1 1 1h4.8c.5 0 1-.4 1-1l.6-8.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M6.6 7v4.4M9.4 7v4.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function ArchiveIcon({ size = 14 }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      aria-hidden="true"
+    >
+      <rect x="2.2" y="2.8" width="11.6" height="3" rx="0.9" />
+      <path
+        d="M3 5.8v6.4c0 .6.4 1 1 1h8c.6 0 1-.4 1-1V5.8"
+        strokeLinecap="round"
+      />
+      <path d="M6.3 8.4h3.4" strokeLinecap="round" />
+    </svg>
+  );
+}

@@ -61,6 +61,7 @@ export default async function ProductPage({
         prNumber: c.prNumber,
         prUrl: c.prUrl,
         auto: c.auto,
+        archived: c.archived,
       }))}
     />
   );

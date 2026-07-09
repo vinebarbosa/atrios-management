@@ -251,3 +251,48 @@ export async function unlinkPr(cardId: string): Promise<Result> {
   revalidatePath("/produtos", "layout");
   return {};
 }
+
+export async function deleteCard(cardId: string): Promise<Result> {
+  if (!(await requireSession())) return { error: "Sessão expirada." };
+  const [deleted] = await db
+    .delete(schema.card)
+    .where(eq(schema.card.id, cardId))
+    .returning();
+  if (!deleted) return { error: "Card não encontrado." };
+  await touchProduct(deleted.productId);
+  revalidatePath("/produtos", "layout");
+  return {};
+}
+
+export async function archiveCard(
+  cardId: string,
+  archived: boolean,
+): Promise<Result> {
+  if (!(await requireSession())) return { error: "Sessão expirada." };
+  const [updated] = await db
+    .update(schema.card)
+    .set({ archived })
+    .where(eq(schema.card.id, cardId))
+    .returning();
+  if (!updated) return { error: "Card não encontrado." };
+  await touchProduct(updated.productId);
+  revalidatePath("/produtos", "layout");
+  return {};
+}
+
+export async function archiveDoneCards(productId: string): Promise<Result> {
+  if (!(await requireSession())) return { error: "Sessão expirada." };
+  await db
+    .update(schema.card)
+    .set({ archived: true })
+    .where(
+      and(
+        eq(schema.card.productId, productId),
+        eq(schema.card.status, "done"),
+        eq(schema.card.archived, false),
+      ),
+    );
+  await touchProduct(productId);
+  revalidatePath("/produtos", "layout");
+  return {};
+}
