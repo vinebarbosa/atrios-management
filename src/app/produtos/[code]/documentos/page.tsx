@@ -39,6 +39,7 @@ export default async function ProductDocumentsPage({
   return (
     <>
       <ProductHeader
+        productId={product.id}
         name={product.name}
         code={product.code}
         stage={product.stage}
@@ -46,6 +47,8 @@ export default async function ProductDocumentsPage({
         accessCount={accessCount}
         documentCount={documentCount}
         active="documentos"
+        description={product.description}
+        longDescription={product.longDescription}
         context={{
           id: product.id,
           stage: product.stage,

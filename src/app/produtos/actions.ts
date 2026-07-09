@@ -68,6 +68,34 @@ export async function createProduct(input: {
   return {};
 }
 
+export async function updateProduct(
+  productId: string,
+  patch: { name?: string; description?: string; longDescription?: string },
+): Promise<Result> {
+  if (!(await requireSession())) return { error: "Sessão expirada." };
+
+  const set: Partial<typeof schema.product.$inferInsert> = {};
+  if (patch.name !== undefined) {
+    const name = patch.name.trim();
+    if (!name) return { error: "Informe o nome do produto." };
+    set.name = name;
+  }
+  if (patch.description !== undefined)
+    set.description = patch.description.trim() || "";
+  if (patch.longDescription !== undefined)
+    set.longDescription = patch.longDescription.trim() || null;
+  if (Object.keys(set).length === 0) return {};
+
+  const [updated] = await db
+    .update(schema.product)
+    .set(set)
+    .where(eq(schema.product.id, productId))
+    .returning();
+  if (!updated) return { error: "Produto não encontrado." };
+  revalidatePath("/", "layout");
+  return {};
+}
+
 export async function setProductStage(
   productId: string,
   stage: number,

@@ -45,6 +45,7 @@ export default async function ProductAccessPage({
   return (
     <>
       <ProductHeader
+        productId={product.id}
         name={product.name}
         code={product.code}
         stage={product.stage}
@@ -52,6 +53,8 @@ export default async function ProductAccessPage({
         accessCount={accesses.length}
         documentCount={documentCount}
         active="acessos"
+        description={product.description}
+        longDescription={product.longDescription}
         context={{
           id: product.id,
           stage: product.stage,

@@ -153,6 +153,7 @@ export function ProductBoard({
   return (
     <>
       <ProductHeader
+        productId={product.id}
         name={product.name}
         code={product.code}
         stage={product.stage}
@@ -160,6 +161,8 @@ export function ProductBoard({
         accessCount={accessCount}
         documentCount={documentCount}
         active="cards"
+        description={product.description}
+        longDescription={product.longDescription}
         context={{
           id: product.id,
           stage: product.stage,

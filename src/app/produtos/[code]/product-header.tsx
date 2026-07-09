@@ -7,10 +7,12 @@ import { Button, StatusPill } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { STAGES } from "@/lib/product-constants";
 import { ContextPanel, type ContextProduct } from "./product-context";
+import { EditProductModal } from "./edit-product-modal";
 
 const CONTEXT_KEY = "atrios.productContextOpen";
 
 export interface ProductHeaderProps {
+  productId: string;
   name: string;
   code: string;
   stage: number;
@@ -18,12 +20,15 @@ export interface ProductHeaderProps {
   accessCount: number;
   documentCount: number;
   active: "cards" | "acessos" | "documentos";
+  description: string;
+  longDescription: string | null;
   /** Detalhes do produto, exibidos entre o nome e as abas (toggle Contexto). */
   context?: ContextProduct;
 }
 
 /** Breadcrumb + identidade do produto + contexto + abas Cards|Acessos. */
 export function ProductHeader({
+  productId,
   name,
   code,
   stage: stageIndex,
@@ -31,6 +36,8 @@ export function ProductHeader({
   accessCount,
   documentCount,
   active,
+  description,
+  longDescription,
   context,
 }: ProductHeaderProps) {
   const stage = STAGES[stageIndex] ?? STAGES[0];
@@ -102,6 +109,12 @@ export function ProductHeader({
           </span>
           <StatusPill hue={stage.hue}>{stage.name}</StatusPill>
           <div className="ml-auto" />
+          <EditProductModal
+            productId={productId}
+            name={name}
+            description={description}
+            longDescription={longDescription}
+          />
           {context && (
             <Button variant="secondary" size="md" onClick={toggleContext}>
               Contexto
