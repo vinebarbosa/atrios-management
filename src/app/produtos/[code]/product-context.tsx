@@ -34,7 +34,7 @@ export function ContextPanel({ product }: { product: ContextProduct }) {
   };
 
   return (
-    <div className="flex flex-col gap-[22px] pb-1 pt-5">
+    <div className="mt-[18px] flex flex-col gap-[22px] border-t border-[rgba(255,255,255,0.055)] pb-7 pt-[18px]">
       <div className="flex flex-wrap gap-10">
         <div className="min-w-[320px] flex-1">
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-8">
