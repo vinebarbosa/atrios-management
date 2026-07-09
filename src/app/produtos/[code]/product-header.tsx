@@ -34,7 +34,7 @@ export function ProductHeader({
   context,
 }: ProductHeaderProps) {
   const stage = STAGES[stageIndex] ?? STAGES[0];
-  const [contextOpen, setContextOpen] = useState(true);
+  const [contextOpen, setContextOpen] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(CONTEXT_KEY);
