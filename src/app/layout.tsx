@@ -13,7 +13,12 @@ export const metadata: Metadata = {
   description: "Gestão dos produtos de software da Átrios",
   manifest: "/manifest.json",
   icons: {
-    icon: "/favicon.ico",
+    // PNG primeiro: navegadores modernos preferem sobre .ico quando ambos
+    // estão presentes; o .ico fica de fallback para clientes mais antigos.
+    icon: [
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/favicon.ico" },
+    ],
     apple: "/apple-touch-icon.png",
   },
   // Sem isso, "Adicionar à Tela de Início" no iOS abre um mini-Safari com
