@@ -13,6 +13,16 @@ export const maxDuration = 300;
 
 const HEARTBEAT_MS = 25_000;
 
+// LISTEN precisa de uma conexão de sessão persistente. O `DATABASE_URL` do Neon
+// aponta para o pooler (PgBouncer, modo transação), que NÃO entrega notificações
+// assíncronas — o LISTEN registra e a conexão volta pro pool, então nada chega.
+// Por isso usamos a conexão direta (unpooled) aqui. O NOTIFY (publish) continua
+// no pool: NOTIFY atravessa o PgBouncer normalmente.
+const LISTEN_DATABASE_URL =
+  process.env.DATABASE_URL_UNPOOLED ??
+  process.env.POSTGRES_URL_NON_POOLING ??
+  process.env.DATABASE_URL;
+
 export async function GET(request: Request): Promise<Response> {
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session) return new Response("Unauthorized", { status: 401 });
@@ -21,7 +31,7 @@ export async function GET(request: Request): Promise<Response> {
   if (!channel) return new Response("Missing channel", { status: 400 });
 
   const encoder = new TextEncoder();
-  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  const client = new Client({ connectionString: LISTEN_DATABASE_URL });
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
