@@ -19,7 +19,10 @@ export function TabBar() {
   return (
     <nav
       aria-label="Navegação principal"
-      className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-[#0b0c0e]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:hidden"
+      // env(safe-area-inset-bottom) resolve para 0 sem viewport-fit=cover (a
+      // página já fica confinada à área segura) — o max() garante um respiro
+      // mínimo acima do home indicator mesmo assim.
+      className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-[#0b0c0e]/95 pb-[max(10px,env(safe-area-inset-bottom))] backdrop-blur-sm md:hidden"
     >
       {TABS.map(({ href, label, Icon }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);

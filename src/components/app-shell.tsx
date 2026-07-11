@@ -30,7 +30,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         }))}
       />
       {/* No mobile a TabBar é fixa embaixo — o padding reserva o espaço dela. */}
-      <div className="flex min-w-0 flex-1 flex-col pb-[calc(52px+env(safe-area-inset-bottom))] md:pb-0">
+      <div className="flex min-w-0 flex-1 flex-col pb-[calc(52px+max(10px,env(safe-area-inset-bottom)))] md:pb-0">
         {children}
       </div>
       <TabBar />
