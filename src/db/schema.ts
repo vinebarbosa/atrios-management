@@ -3,6 +3,7 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -471,3 +472,191 @@ export const productStageEventRelations = relations(
     }),
   }),
 );
+
+/* ---- Diagnóstico Provimento CNJ 213/2026 -------------------------------- */
+
+export type RespostaValor = "sim" | "parcial" | "nao" | "nao_sei";
+export type DiagnosticoEscopo = "inicial" | "completo";
+export type DiagnosticoModelo =
+  | "propria"
+  | "contratada"
+  | "saas"
+  | "compartilhada"
+  | "nao_sei";
+export type DiagnosticoStatusFunil =
+  | "em_andamento"
+  | "concluido"
+  | "proposta"
+  | "ganho"
+  | "perdido";
+export type IdentidadeItem = "site" | "email" | "fone";
+
+/** Condições especiais do requisito (ex.: nota de dispensa de pentest em SaaS). */
+export type RequisitoCondicoes = {
+  // exibe a nota no relatório quando o modelo de solução do diagnóstico bate
+  notaModelos?: DiagnosticoModelo[];
+  nota?: string;
+};
+
+// Requisitos do Anexo IV em banco, não em código — texto, peso e classes
+// editáveis sem deploy. Seed: src/db/seed-provimento.ts (upsert por id).
+export const requisito = pgTable(
+  "requisito",
+  {
+    // id determinístico ("req-01"…) para o seed ser idempotente sem apagar
+    // respostas que referenciam o requisito
+    id: text("id").primaryKey(),
+    etapa: integer("etapa").notNull(),
+    refNormativa: text("ref_normativa").notNull(),
+    perguntaTecnica: text("pergunta_tecnica").notNull(),
+    perguntaSimples: text("pergunta_simples").notNull(),
+    peso: integer("peso").notNull(),
+    classes: jsonb("classes").$type<number[]>().notNull(),
+    condicoes: jsonb("condicoes").$type<RequisitoCondicoes>(),
+    ordem: integer("ordem").notNull(),
+    ativo: boolean("ativo").default(true).notNull(),
+  },
+  (table) => [index("requisito_etapa_idx").on(table.etapa)],
+);
+
+// Vigência, prazos art. 20/23 e prorrogações estaduais (uf null = nacional).
+// O motor lê daqui; mudança de norma = update de linha, não deploy.
+export const parametroNorma = pgTable(
+  "parametro_norma",
+  {
+    // id determinístico "<chave>:<uf|*>" (seed idempotente)
+    id: text("id").primaryKey(),
+    chave: text("chave").notNull(),
+    valor: text("valor").notNull(),
+    uf: text("uf"),
+    descricao: text("descricao"),
+  },
+  (table) => [index("parametro_norma_chave_idx").on(table.chave)],
+);
+
+export const diagnostico = pgTable(
+  "diagnostico",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    serventia: text("serventia").notNull(),
+    cns: text("cns"),
+    municipio: text("municipio"),
+    uf: text("uf").notNull(),
+    classe: integer("classe").notNull(),
+    subclasse: text("subclasse"),
+    modeloSolucao: text("modelo_solucao")
+      .$type<DiagnosticoModelo>()
+      .notNull()
+      .default("nao_sei"),
+    contatoNome: text("contato_nome").notNull(),
+    contatoEmail: text("contato_email"),
+    contatoWhatsapp: text("contato_whatsapp"),
+    escopo: text("escopo").$type<DiagnosticoEscopo>().notNull(),
+    // preenchido ao concluir (snapshot do motor na conclusão)
+    scoreGeral: integer("score_geral"),
+    statusFunil: text("status_funil")
+      .$type<DiagnosticoStatusFunil>()
+      .notNull()
+      .default("em_andamento"),
+    criadoPorId: text("criado_por_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("diagnostico_statusFunil_idx").on(table.statusFunil),
+    index("diagnostico_uf_idx").on(table.uf),
+  ],
+);
+
+export const resposta = pgTable(
+  "resposta",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    diagnosticoId: text("diagnostico_id")
+      .notNull()
+      .references(() => diagnostico.id, { onDelete: "cascade" }),
+    requisitoId: text("requisito_id")
+      .notNull()
+      .references(() => requisito.id, { onDelete: "cascade" }),
+    valor: text("valor").$type<RespostaValor>().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("resposta_diagnosticoId_requisitoId_uq").on(
+      table.diagnosticoId,
+      table.requisitoId,
+    ),
+  ],
+);
+
+// Identidade digital (site/e-mail/fone) — não pontua no provimento; vira
+// card de oportunidade comercial no relatório.
+export const respostaIdentidade = pgTable(
+  "resposta_identidade",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    diagnosticoId: text("diagnostico_id")
+      .notNull()
+      .references(() => diagnostico.id, { onDelete: "cascade" }),
+    item: text("item").$type<IdentidadeItem>().notNull(),
+    valor: text("valor").$type<RespostaValor>().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("resposta_identidade_diagnosticoId_item_uq").on(
+      table.diagnosticoId,
+      table.item,
+    ),
+  ],
+);
+
+export const diagnosticoRelations = relations(diagnostico, ({ one, many }) => ({
+  criadoPor: one(user, {
+    fields: [diagnostico.criadoPorId],
+    references: [user.id],
+  }),
+  respostas: many(resposta),
+  respostasIdentidade: many(respostaIdentidade),
+}));
+
+export const respostaRelations = relations(resposta, ({ one }) => ({
+  diagnostico: one(diagnostico, {
+    fields: [resposta.diagnosticoId],
+    references: [diagnostico.id],
+  }),
+  requisito: one(requisito, {
+    fields: [resposta.requisitoId],
+    references: [requisito.id],
+  }),
+}));
+
+export const respostaIdentidadeRelations = relations(
+  respostaIdentidade,
+  ({ one }) => ({
+    diagnostico: one(diagnostico, {
+      fields: [respostaIdentidade.diagnosticoId],
+      references: [diagnostico.id],
+    }),
+  }),
+);
+
+export const requisitoRelations = relations(requisito, ({ many }) => ({
+  respostas: many(resposta),
+}));

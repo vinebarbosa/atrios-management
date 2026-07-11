@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // pdfkit carrega fontes AFM do próprio pacote em runtime — não bundlar
+  serverExternalPackages: ["pdfkit"],
 };
 
 export default nextConfig;

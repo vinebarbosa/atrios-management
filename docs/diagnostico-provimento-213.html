@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico de Adequação — Provimento CNJ 213/2026 + LGPD</title>
+<style>
+  :root{--azul:#1e3a5f;--azul2:#2d5a8e;--ok:#2e7d32;--aten:#e65100;--crit:#c62828;--cinza:#f4f6f8;--borda:#dde3ea}
+  *{box-sizing:border-box;margin:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;color:#222;background:var(--cinza);line-height:1.5}
+  .wrap{max-width:860px;margin:0 auto;padding:24px 16px 80px}
+  header{background:var(--azul);color:#fff;padding:28px 16px;text-align:center}
+  header h1{font-size:1.4rem;font-weight:600}
+  header p{opacity:.85;font-size:.9rem;margin-top:6px}
+  .card{background:#fff;border:1px solid var(--borda);border-radius:10px;padding:22px;margin-top:18px}
+  .card h2{font-size:1.05rem;color:var(--azul);border-bottom:2px solid var(--azul);padding-bottom:8px;margin-bottom:14px}
+  .card .scope{font-size:.85rem;color:#666;margin:-8px 0 14px}
+  label{display:block;font-size:.88rem;font-weight:600;margin:12px 0 4px}
+  input[type=text],input[type=email],select{width:100%;padding:9px 10px;border:1px solid var(--borda);border-radius:6px;font-size:.92rem}
+  .q{padding:12px 0;border-bottom:1px dashed var(--borda)}
+  .q:last-child{border-bottom:none}
+  .q p{font-size:.92rem;margin-bottom:8px}
+  .q .ref{font-size:.75rem;color:#888;font-weight:400}
+  .q .help{font-size:.84rem;color:#777;font-style:italic;margin:-4px 0 8px;padding-left:10px;border-left:3px solid var(--borda)}
+  .opts{display:flex;gap:8px;flex-wrap:wrap}
+  .opts label{flex:1;min-width:90px;margin:0;text-align:center;padding:7px 4px;border:1px solid var(--borda);border-radius:6px;font-weight:500;font-size:.85rem;cursor:pointer;background:#fafbfc}
+  .opts input{display:none}
+  .opts input:checked+span{font-weight:700}
+  .opts label:has(input:checked){border-color:var(--azul2);background:#e8f0fa;color:var(--azul)}
+  button{background:var(--azul);color:#fff;border:none;border-radius:8px;padding:14px 28px;font-size:1rem;font-weight:600;cursor:pointer;margin-top:24px;width:100%}
+  button:hover{background:var(--azul2)}
+  /* relatório */
+  #report{display:none}
+  .alerta{border-left:6px solid var(--crit);background:#fdecea;padding:14px 16px;border-radius:6px;margin-top:16px;font-size:.92rem}
+  .alerta.ok{border-color:var(--ok);background:#eaf5ea}
+  .scorebig{font-size:3rem;font-weight:700;text-align:center;color:var(--azul)}
+  .scorelabel{text-align:center;color:#666;font-size:.9rem;margin-bottom:12px}
+  .bar{margin:10px 0}
+  .bar .top{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:3px}
+  .bar .track{background:#e9edf2;border-radius:99px;height:14px;overflow:hidden}
+  .bar .fill{height:100%;border-radius:99px}
+  .badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.72rem;font-weight:700;color:#fff}
+  .b-ok{background:var(--ok)}.b-aten{background:var(--aten)}.b-crit{background:var(--crit)}
+  .gap{padding:10px 12px;border:1px solid var(--borda);border-left-width:5px;border-radius:6px;margin:8px 0;font-size:.88rem}
+  .gap .gref{font-size:.75rem;color:#777}
+  .g3{border-left-color:var(--crit)}.g2{border-left-color:var(--aten)}.g1{border-left-color:#999}
+  .cta{background:var(--azul);color:#fff;border-radius:10px;padding:24px;text-align:center;margin-top:18px}
+  .cta p{margin-bottom:4px}
+  .noprint{}
+  @media print{.noprint{display:none!important}body{background:#fff}header{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<header>
+  <img src="data:image/png;base64,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" alt="Átrios" style="height:58px;margin-bottom:10px">
+  <h1>Diagnóstico de Adequação — Provimento CNJ n. 213/2026 e LGPD</h1>
+  <p>USO INTERNO · Roteiro de entrevista (call com a serventia) · ~20 minutos</p>
+  <p style="font-size:.82rem;opacity:.75;margin-top:4px">A pergunta técnica é para você; o texto cinza abaixo é como perguntar em linguagem simples se o entrevistado não conhecer o termo. Se ele não souber responder, marque "Não sei".</p>
+</header>
+<div class="wrap">
+
+<form id="form">
+  <div class="card">
+    <h2>Identificação da serventia</h2>
+    <label>Nome da serventia*<input type="text" id="f-nome" required></label>
+    <label>Responsável (titular/interino/interventor)*<input type="text" id="f-resp" required></label>
+    <label>E-mail ou WhatsApp de contato*<input type="text" id="f-contato" required></label>
+    <label>UF / Município<input type="text" id="f-cidade"></label>
+    <label>Quanto o cartório arrecada, em média, por semestre?*
+      <select id="f-classe" required>
+        <option value="">Selecione…</option>
+        <option value="1">Até R$ 100 mil</option>
+        <option value="2">Entre R$ 100 mil e R$ 500 mil</option>
+        <option value="3">Acima de R$ 500 mil</option>
+      </select></label>
+    <label>Onde fica o sistema que o cartório usa no dia a dia?
+      <select id="f-modelo">
+        <option value="propria">Em um servidor/computador dentro do próprio cartório</option>
+        <option value="contratada">Sistema de uma empresa, instalado no cartório</option>
+        <option value="saas">Totalmente na internet/nuvem (acessa pelo navegador ou o fornecedor cuida de tudo)</option>
+        <option value="compartilhada">Sistema compartilhado com outros cartórios (associação, central, operador nacional)</option>
+        <option value="naosei">Não sei informar</option>
+      </select></label>
+    <label>Escopo do diagnóstico
+      <select id="f-escopo">
+        <option value="inicial">Inicial — Etapas 1 e 2 (obrigatórias, art. 20) + identidade digital</option>
+        <option value="completo">Completo — todas as 5 etapas</option>
+      </select></label>
+  </div>
+  <div class="card" id="card-ident">
+    <h2>Identidade digital da serventia</h2>
+    <p class="scope">Não pontua no provimento — mapeia oportunidades de site, e-mail e número corporativo.</p>
+    <div class="q" data-ident="site">
+      <p><b>A serventia possui site institucional com domínio próprio?</b></p>
+      <p class="help">Como perguntar: "O cartório tem um site oficial próprio, tipo cartorioX.com.br, onde o cidadão encontra os serviços e contatos?"</p>
+      <div class="opts">
+        <label><input type="radio" name="ident-site" value="sim" required><span>Sim</span></label>
+        <label><input type="radio" name="ident-site" value="parcial"><span>Parcial</span></label>
+        <label><input type="radio" name="ident-site" value="nao"><span>Não</span></label>
+        <label><input type="radio" name="ident-site" value="ns"><span>Não sei</span></label>
+      </div>
+    </div>
+    <div class="q" data-ident="email">
+      <p><b>Os colaboradores usam e-mail corporativo individual no domínio da serventia (não contas pessoais Gmail/Hotmail)?</b></p>
+      <p class="help">Como perguntar: "Os e-mails do cartório são profissionais, tipo maria@cartorioX.com.br, ou cada um usa o Gmail/Hotmail pessoal?"</p>
+      <div class="opts">
+        <label><input type="radio" name="ident-email" value="sim" required><span>Sim</span></label>
+        <label><input type="radio" name="ident-email" value="parcial"><span>Parcial</span></label>
+        <label><input type="radio" name="ident-email" value="nao"><span>Não</span></label>
+        <label><input type="radio" name="ident-email" value="ns"><span>Não sei</span></label>
+      </div>
+    </div>
+    <div class="q" data-ident="fone">
+      <p><b>O atendimento telefônico/WhatsApp usa número corporativo da serventia (não celular pessoal de colaborador)?</b></p>
+      <p class="help">Como perguntar: "O WhatsApp e o telefone que atendem o público são do cartório, ou é o celular pessoal de algum funcionário?"</p>
+      <div class="opts">
+        <label><input type="radio" name="ident-fone" value="sim" required><span>Sim</span></label>
+        <label><input type="radio" name="ident-fone" value="parcial"><span>Parcial</span></label>
+        <label><input type="radio" name="ident-fone" value="nao"><span>Não</span></label>
+        <label><input type="radio" name="ident-fone" value="ns"><span>Não sei</span></label>
+      </div>
+    </div>
+  </div>
+  <div id="blocos"></div>
+  <button type="submit" class="noprint">Gerar diagnóstico</button>
+</form>
+
+<div id="report"></div>
+</div>
+
+<script>
+// ---------- Parâmetros oficiais ----------
+const VIGENCIA = new Date('2026-02-20'); // ponytail: confirmar data exata de publicação/vigência no DJe
+const PRAZO_INICIAL = {3:90, 2:150, 1:210};          // art. 20 (Etapas 1+2), dias
+const PRORROGACAO_RN = 90; // CGJ-RN, PP 0000897-12.2026.2.00.0820, decisão de 02/07/2026 (Anoreg/RN) — vale só para o RN
+const PRAZO_TOTAL   = {3:24, 2:30, 1:36};            // art. 23, meses
+const PARAMS = {
+  1:{rpo:'24h',rto:'24h',bkp:'72h',net:'2 Mbps',rest:'anual'},
+  2:{rpo:'12h',rto:'24h',bkp:'48h',net:'10 Mbps',rest:'anual'},
+  3:{rpo:'4h', rto:'8h', bkp:'24h',net:'50 Mbps',rest:'semestral'}
+};
+
+// ---------- Requisitos (etapa, ref no Anexo IV, peso 1-3, classes aplicáveis) ----------
+// txt = como perguntar em linguagem simples · tec = pergunta técnica (exibida em cima e usada no relatório)
+const REQS = [
+ [1,'1.1','Existe uma pessoa nomeada por escrito como responsável pela parte de tecnologia do cartório?','Há responsável técnico interno formalmente designado?',2,[1,2,3]],
+ [1,'1.1','Existe uma pessoa nomeada como responsável pela proteção dos dados pessoais (o "encarregado de dados")?','Há Encarregado de Proteção de Dados (DPO) designado, quando aplicável?',2,[1,2,3]],
+ [1,'1.1-II','O titular assinou um documento formal assumindo a responsabilidade pelos dados pessoais tratados no cartório (papel de "controlador")?','O titular foi formalmente designado como controlador de dados pessoais?',1,[1,2,3]],
+ [1,'1.2','O cartório tem um documento escrito com as regras de segurança: quem pode acessar o quê, regras de senha, o que fazer em caso de problema?','Existe Política de Segurança da Informação (PSI) formalizada, aprovada e divulgada, com o conteúdo mínimo do Anexo III?',3,[1,2,3]],
+ [1,'1.3','Cada funcionário tem seu próprio usuário e senha (ninguém compartilha), e os acessos mais importantes pedem uma confirmação extra, como código no celular?','Os acessos são individualizados, com MFA obrigatório nos acessos administrativos e vedação a credenciais compartilhadas?',3,[1,2,3]],
+ [1,'1.4','Existe um registro escrito de quais dados pessoais o cartório coleta, para que usa e com quem compartilha (exigência da LGPD)?','Existe registro das operações de tratamento de dados pessoais (ROPA — art. 7º §1º)?',3,[1,2,3]],
+ [1,'1.5','Se acontecer um problema grave (invasão, vazamento de dados, sistema fora do ar), já está definido quem avisa a Corregedoria em até 72 horas e como?','Há procedimento formalizado de comunicação de incidentes críticos à Corregedoria (≤72h) e à ANPD?',3,[1,2,3]],
+ [1,'1.7','Existe uma lista atualizada de tudo que o cartório usa: computadores, programas, certificados digitais e contratos com empresas de tecnologia?','Existe inventário completo de ativos tecnológicos, integrações, bancos de dados, certificados e contratos?',2,[1,2,3]],
+ [1,'1.8','Todos os programas são originais (licenciados) e o contrato com a empresa do sistema garante que, se o cartório quiser trocar de fornecedor, leva todos os dados junto?','Os softwares são licenciados e os contratos possuem cláusulas de confidencialidade, reversibilidade, portabilidade em formato aberto e LGPD?',2,[1,2,3]],
+ [1,'1.9','O cartório já declarou a conclusão da Etapa 1 no sistema Justiça Aberta do CNJ?','A conclusão da Etapa 1 foi declarada no Sistema Justiça Aberta?',1,[1,2,3]],
+ [2,'2.1','Os computadores principais têm no-break (aparelho que segura a energia quando a luz cai) e a parte elétrica tem aterramento com laudo de um profissional?','Há SAI/UPS com autonomia ~30 min e aterramento técnico aferido com laudo (art. 12 §8º)?',2,[1,2,3]],
+ [2,'2.2','Se faltar energia por muito tempo, já está combinado o que fazer para proteger os equipamentos e retomar o atendimento?','Existe plano de contingência energética compatível com a classe?',1,[1,2,3]],
+ [2,'2.3','O servidor/computador principal fica em local fechado, com acesso controlado e protegido contra incêndio, goteira e calor excessivo?','O ambiente físico dos equipamentos críticos possui acesso restrito e proteção contra incêndio, inundação e variações térmicas?',2,[1,2,3]],
+ [2,'2.4','A internet do cartório é rápida e estável o bastante para o trabalho do dia a dia e para enviar as cópias de segurança?','A conectividade é compatível com a classe (ou o backup comprovadamente cumpre o RPO)?',2,[1,2,3]],
+ [2,'2.5','Existe um plano escrito do que fazer se o sistema parar (quem faz o quê, em quanto tempo tudo volta a funcionar e quanto de trabalho é aceitável perder)?','PCN e PRD estão formalizados, com análise de riscos, RTO/RPO definidos e medidas de 30/90 dias?',3,[1,2,3]],
+ [2,'2.6','Os computadores dão conta do trabalho e existe um técnico ou empresa de suporte que atende sempre que precisa?','Há equipamentos adequados e suporte técnico contínuo (próprio ou contratado)?',1,[1,2,3]],
+ [2,'2.7','Todos os computadores do cartório têm antivírus instalado e atualizado?','Há proteção de endpoint (antivírus/antimalware) em todas as estações e servidores?',2,[1,2,3]],
+ [2,'2.8','Existe um documento que descreve como a rede do cartório é montada: quais equipamentos, onde ficam os dados e onde são guardadas as cópias de segurança?','Existe documento técnico de arquitetura com topologia de rede, ambientes, fluxos de dados críticos e localização dos backups?',1,[1,2,3]],
+ [2,'art. 4º §3º','Os programas e o Windows dos computadores estão em versões atuais, que ainda recebem atualização do fabricante (nada de Windows 7, por exemplo)?','Sistemas operacionais, SGBDs e aplicações críticas estão fora de EOL, com evidência documental de suporte vigente?',2,[1,2,3]],
+ [2,'2.9','O cartório já declarou a conclusão da Etapa 2 no Justiça Aberta?','A conclusão da Etapa 2 foi declarada no Justiça Aberta?',1,[1,2,3]],
+ [3,'3.1','Os dados do cartório ficam protegidos por criptografia (embaralhados, de forma que só o cartório consegue ler), tanto guardados quanto quando são enviados pela internet?','Há criptografia em trânsito (TLS 1.2+) e em repouso (AES-256), inclusive nos backups?',3,[1,2,3]],
+ [3,'3.1','As "chaves" dessa proteção (senhas de criptografia e certificados) têm controle de quem guarda, quem acessa e quando são trocadas?','Há gestão formal de chaves criptográficas (inventário, custódia segregada, rotação e registro)?',2,[1,2,3]],
+ [3,'3.2','É feita cópia de segurança (backup) completa e automática de todos os dados, com a frequência exigida para o porte do cartório?','O backup completo é executado no prazo da classe, com incrementais dentro do RPO?',3,[1,2,3]],
+ [3,'3.2.III-d','As cópias de segurança ficam guardadas em pelo menos dois lugares diferentes, sendo um deles protegido de tal forma que nem um vírus ou invasor consegue apagar?','Os backups são mantidos em 2 ambientes independentes, ao menos 1 com imutabilidade (WORM/retention lock, anti-ransomware)?',3,[1,2,3]],
+ [3,'3.3','Se a cópia de segurança falhar, alguém recebe um aviso automático no mesmo dia?','As rotinas de backup são monitoradas, com alerta automático e registro formal de falhas?',2,[1,2,3]],
+ [3,'3.4','A rede tem um equipamento ou programa (firewall) que filtra o que entra e sai da internet, e a rede do público/wi-fi é separada da rede dos funcionários?','Há firewall stateful com IPS/IDS e segmentação lógica de rede (VLAN ou equivalente)?',3,[2,3]],
+ [3,'art. 8º §5º','Existe uma proteção básica que bloqueia acessos vindos de fora da internet, e o wi-fi de visitantes é separado dos computadores de trabalho?','Há proteção de perímetro simplificada: filtragem de conexões, registro de eventos e configuração documentada?',2,[1]],
+ [3,'3.5','Além do antivírus comum, os computadores têm uma proteção mais avançada, que monitora comportamentos estranhos e avisa quando algo suspeito acontece?','Há proteção avançada de endpoint (EDR/monitoramento ativo com detecção comportamental)?',2,[3]],
+ [3,'3.6','O sistema do cartório usa um banco de dados confiável, que não perde nem corrompe informações quando há falha?','O SGBD possui integridade transacional e logs ativos?',2,[1,2,3]],
+ [3,'3.7','Se um equipamento importante quebrar, existe um reserva ou um plano para o cartório continuar funcionando?','Há tolerância a falhas ou alta disponibilidade compatível com a classe?',2,[2,3]],
+ [3,'3.8','O sistema registra automaticamente quem fez cada coisa e a que horas, e esse histórico não pode ser apagado nem alterado por ninguém?','As trilhas de auditoria são imutáveis, com sincronização de tempo (NTP) e identificação inequívoca do usuário?',3,[1,2,3]],
+ [3,'3.9','O cartório já declarou a conclusão da Etapa 3 no Justiça Aberta?','A conclusão da Etapa 3 foi declarada no Justiça Aberta?',1,[1,2,3]],
+ [4,'4.1','Já foi feita uma verificação, com relatório escrito, provando que esse histórico de atividades funciona e fica guardado por pelo menos 5 anos?','Foi emitido relatório de conformidade das trilhas de auditoria (imutabilidade, NTP, retenção mínima de 5 anos)?',2,[1,2,3]],
+ [4,'4.2','Existe uma rotina combinada para manter os sistemas sempre atualizados (não se atualiza "quando dá")?','Existe rotina documentada de atualização periódica de sistemas e aplicações?',2,[1,2,3]],
+ [4,'4.3','Quando aparece uma falha de segurança grave, ela é corrigida em até 30 dias, com registro do que foi feito?','Há gestão formal de vulnerabilidades (críticas ≤30 dias; ≤72h com exploração ativa), com registro no dossiê?',3,[1,2,3]],
+ [4,'4.4','Pelo menos uma vez por ano é feito um treino simulando um desastre (ex: servidor queimou) para testar se o plano de emergência funciona?','É realizada simulação anual de desastre para validação do PCN/PRD?',2,[1,2,3]],
+ [4,'4.5','O cartório já testou, de verdade, recuperar os dados a partir da cópia de segurança — e documentou esse teste em ata?','Há testes documentados de restauração de backup na periodicidade da classe, com ata (Anexo V)?',3,[1,2,3]],
+ [4,'4.6','De tempos em tempos, um técnico ou empresa faz uma revisão geral de segurança no cartório, procurando falhas?','São realizadas avaliações técnicas periódicas de segurança?',2,[1,2,3]],
+ [4,'4.7','O cartório já contratou (ou recebeu do fornecedor do sistema) um teste de invasão, em que especialistas tentam invadir para encontrar falhas?','Foi realizado pentest bienal (ou validado relatório técnico coletivo do fornecedor — Anexo II, 6)?',2,[3]],
+ [4,'4.8','Quando acontece um problema de segurança, alguém investiga a causa e registra o que foi feito para não repetir?','Todos os incidentes possuem análise de causa raiz e lições aprendidas documentadas?',1,[1,2,3]],
+ [4,'4.9','O cartório já declarou a conclusão da Etapa 4 no Justiça Aberta?','A conclusão da Etapa 4 foi declarada no Justiça Aberta?',1,[1,2,3]],
+ [5,'5.1','O sistema do cartório consegue enviar informações automaticamente para as centrais e plataformas do Judiciário/CNJ?','O sistema é interoperável com as plataformas eletrônicas de fiscalização do Judiciário (art. 19)?',2,[1,2,3]],
+ [5,'5.2','Os documentos e dados ficam salvos em formatos abertos (como PDF/A), que qualquer sistema consegue ler — sem ficar preso ao fornecedor atual?','São adotados padrões abertos (PDF/A, XML) com neutralidade tecnológica e prevenção de lock-in de fornecedor?',2,[1,2,3]],
+ [5,'5.3','Os funcionários recebem treinamentos periódicos sobre segurança (senhas, golpes por e-mail, cuidados com dados), com lista de presença?','Há capacitação periódica dos colaboradores com registro formal?',1,[1,2,3]],
+ [5,'5.4','As regras de segurança do cartório são revisadas quando muda alguma lei ou tecnologia (não ficam esquecidas na gaveta)?','A PSI e os padrões criptográficos são revisados formalmente a cada alteração normativa ou tecnológica relevante?',1,[1,2,3]],
+ [5,'5.5','Os comprovantes de tudo isso (atas, relatórios, prints) ficam guardados de forma organizada por pelo menos 5 anos?','As evidências do dossiê técnico são retidas por no mínimo 5 anos?',2,[1,2,3]],
+ [5,'5.6','O cartório já testou exportar TODOS os seus dados do sistema, para provar que conseguiria migrar de fornecedor se precisasse?','Foi realizada simulação documentada de extração integral do acervo em formato não proprietário (teste de reversibilidade)?',3,[1,2,3]],
+ [5,'5.7','O cartório já declarou a conclusão da Etapa 5 no Justiça Aberta?','A conclusão da Etapa 5 foi declarada no Justiça Aberta?',1,[1,2,3]],
+].map((r,i)=>({id:i,etapa:r[0],ref:r[1],txt:r[2],tec:r[3],peso:r[4],classes:r[5]}));
+
+const ETAPAS = {
+ 1:'Etapa 1 — Organização e proteção de dados (LGPD)',
+ 2:'Etapa 2 — Estrutura e funcionamento',
+ 3:'Etapa 3 — Proteção dos dados e cópias de segurança',
+ 4:'Etapa 4 — Testes e acompanhamento',
+ 5:'Etapa 5 — Integração e manutenção contínua'};
+const ESCOPO = {
+ 1:'Responsáveis nomeados, regras escritas e adequação à Lei de Proteção de Dados.',
+ 2:'Energia, equipamentos, internet e plano para emergências.',
+ 3:'Como os dados são protegidos e como são feitas as cópias de segurança.',
+ 4:'Testes que provam que a proteção funciona de verdade.',
+ 5:'Integração com o CNJ, treinamentos e manutenção ao longo do tempo.'};
+
+// ---------- Render formulário ----------
+const blocos = document.getElementById('blocos');
+for(let e=1;e<=5;e++){
+  const card = document.createElement('div'); card.className='card etapa'; card.dataset.etapa=e;
+  card.innerHTML = `<h2>${ETAPAS[e]}</h2><p class="scope">${ESCOPO[e]}</p>` +
+    REQS.filter(r=>r.etapa===e).map(r=>`
+    <div class="q" data-id="${r.id}" data-classes="${r.classes.join(',')}">
+      <p><b>${r.tec}</b> <span class="ref">(Anexo IV, ${r.ref} · peso ${r.peso})</span></p>
+      <p class="help">Como perguntar: "${r.txt}"</p>
+      <div class="opts">
+        ${['sim|Sim','parcial|Parcial','nao|Não','ns|Não sei'].map(o=>{const[v,l]=o.split('|');
+          return `<label><input type="radio" name="q${r.id}" value="${v}" required><span>${l}</span></label>`}).join('')}
+      </div>
+    </div>`).join('');
+  blocos.appendChild(card);
+}
+
+// esconde etapas fora do escopo e perguntas não aplicáveis à classe
+function etapasAtivas(){ return document.getElementById('f-escopo').value==='inicial' ? [1,2] : [1,2,3,4,5]; }
+function applyVisibility(){
+  const c = document.getElementById('f-classe').value;
+  const ativas = etapasAtivas();
+  document.querySelectorAll('.card.etapa').forEach(card=>{
+    card.style.display = ativas.includes(+card.dataset.etapa)?'':'none';
+  });
+  document.querySelectorAll('.q[data-id]').forEach(q=>{
+    const etapaOk = ativas.includes(+q.closest('.card').dataset.etapa);
+    const classeOk = !c || q.dataset.classes.split(',').includes(c);
+    const ok = etapaOk && classeOk;
+    q.style.display = classeOk?'':'none';
+    q.querySelectorAll('input').forEach(i=>{i.required = ok; if(!ok) i.checked = i.checked && etapaOk;});
+  });
+}
+document.getElementById('f-classe').addEventListener('change',applyVisibility);
+document.getElementById('f-escopo').addEventListener('change',applyVisibility);
+applyVisibility();
+
+// ---------- Motor ----------
+const VAL = {sim:1, parcial:.5, nao:0, ns:0};
+document.getElementById('form').addEventListener('submit',ev=>{
+  ev.preventDefault();
+  const classe = +document.getElementById('f-classe').value;
+  const modelo = document.getElementById('f-modelo').value;
+  const nome = document.getElementById('f-nome').value;
+  const ativas = etapasAtivas();
+  const aplic = REQS.filter(r=>r.classes.includes(classe) && ativas.includes(r.etapa));
+  const resp = {}; aplic.forEach(r=>resp[r.id]=document.querySelector(`input[name=q${r.id}]:checked`)?.value||'nao');
+
+  const porEtapa={};
+  for(const e of ativas){
+    const rs=aplic.filter(r=>r.etapa===e);
+    const tot=rs.reduce((s,r)=>s+r.peso,0);
+    const obt=rs.reduce((s,r)=>s+r.peso*VAL[resp[r.id]],0);
+    porEtapa[e]=Math.round(100*obt/tot);
+  }
+  const geral=Math.round(ativas.reduce((s,e)=>s+porEtapa[e],0)/ativas.length);
+  const gaps=aplic.filter(r=>VAL[resp[r.id]]<1)
+                  .sort((a,b)=>b.peso-a.peso||a.etapa-b.etapa);
+
+  // identidade digital (não pontua — vira oportunidade comercial)
+  const identVal = k=>document.querySelector(`input[name=ident-${k}]:checked`)?.value||'ns';
+  const IDENT_PITCH = {
+    site:{t:'Site institucional com domínio próprio',
+      d:'Canal oficial para a política de privacidade e para o atendimento aos direitos dos titulares — procedimento que a Política de Segurança da Informação deve prever (Anexo III, 4.8-IV, e art. 18 da LGPD). Sem canal próprio, o cartório não demonstra como o cidadão exerce esses direitos. O domínio próprio é também pré-requisito do e-mail corporativo.',
+      a:'Argumento na call: "A PSI que vamos elaborar precisa indicar COMO o cidadão solicita os dados dele. Hoje, qual seria esse canal oficial?"'},
+    email:{t:'E-mail corporativo individual no domínio da serventia',
+      d:'O art. 5º exige identificação do usuário, rastreabilidade das ações e responsabilização individual, vedando credenciais compartilhadas — e-mail pessoal ou caixa única (cartorio@gmail.com) tratando dados de titulares contraria esse princípio e deixa dados do cartório em conta que o titular da delegação não controla (art. 46 da LGPD). É também o canal formal de comunicação de incidentes à Corregedoria (Anexo IV, 1.5).',
+      a:'Argumento na call: "Se um funcionário sair amanhã, o cartório mantém o histórico e bloqueia o acesso dele em 1 clique? Com Gmail pessoal, não."'},
+    fone:{t:'Número/WhatsApp corporativo da serventia',
+      d:'Atendimento pelo celular pessoal de colaborador significa dados pessoais de cidadãos (documentos, certidões, CPF) armazenados em dispositivo fora da governança da serventia — descumprindo o dever de medidas técnicas adequadas (art. 7º do Provimento c/c art. 46 da LGPD) e sem trilha de auditoria. Se o colaborador sai, o histórico de atendimento sai junto.',
+      a:'Argumento na call: "Hoje, se pedirem o histórico de uma conversa com um cidadão de 6 meses atrás, o cartório consegue apresentar? Em qual celular ele está?"'}};
+  const identOps = Object.keys(IDENT_PITCH).filter(k=>identVal(k)!=='sim');
+
+  // prazos
+  const hoje=new Date();
+  const d1=new Date(VIGENCIA); d1.setDate(d1.getDate()+PRAZO_INICIAL[classe]+PRORROGACAO_RN);
+  const dT=new Date(VIGENCIA); dT.setMonth(dT.getMonth()+PRAZO_TOTAL[classe]);
+  const dias1=Math.ceil((d1-hoje)/864e5), diasT=Math.ceil((dT-hoje)/864e5);
+  const fmt=d=>d.toLocaleDateString('pt-BR');
+  const etapa12ok = porEtapa[1]>=100 && porEtapa[2]>=100;
+
+  const status=s=>s>=80?['Adequado','b-ok','var(--ok)']:s>=40?['Atenção','b-aten','var(--aten)']:['Crítico','b-crit','var(--crit)'];
+
+  let alerta;
+  if(etapa12ok) alerta=`<div class="alerta ok"><b>Etapas 1 e 2 concluídas.</b> Prazo global de adequação (todas as etapas): <b>${fmt(dT)}</b> (${diasT} dias).</div>`;
+  else if(dias1<0) alerta=`<div class="alerta"><b>⚠️ Prazo vencido — inclusive a prorrogação.</b> O prazo do art. 20 para as Etapas 1 e 2 (Classe ${classe}), já somada a prorrogação de 90 dias concedida pela CGJ-RN (decisão de 02/07/2026, PP 0000897-12), venceu em <b>${fmt(d1)}</b> — há ${-dias1} dias. Não há nova prorrogação possível (art. 21 admite uma única). A serventia está sujeita a fiscalização e PAD (art. 24). Prazo global: ${fmt(dT)}.</div>`;
+  else alerta=`<div class="alerta"><b>⏳ Última janela.</b> Com a prorrogação de 90 dias concedida pela CGJ-RN (decisão de 02/07/2026, a pedido da Anoreg/RN), as Etapas 1 e 2 devem estar concluídas até <b>${fmt(d1)}</b> (${dias1} dias restantes). É a única prorrogação que o art. 21 permite — e a decisão exige medidas mitigatórias desde já, com acompanhamento pela Seção de Correição. Prazo global: ${fmt(dT)}.</div>`;
+
+  const saasNote = (classe===3 && (modelo==='saas'||modelo==='compartilhada'))
+    ? `<p style="font-size:.85rem;color:#666;margin-top:10px">ℹ️ Operando em ambiente SaaS/centralizado, o pentest individual pode ser dispensado mediante relatório técnico coletivo do fornecedor e declaração do titular (Anexo II, 6.3).</p>`:'';
+
+  const p=PARAMS[classe];
+  document.getElementById('report').innerHTML=`
+    <div class="card"><h2>Resultado do diagnóstico — ${nome}</h2>
+      <p style="font-size:.9rem">Classe <b>${classe}</b> · Parâmetros mínimos da classe: backup completo a cada <b>${p.bkp}</b>, RPO <b>${p.rpo}</b>, RTO <b>${p.rto}</b>, teste de restauração <b>${p.rest}</b>, internet de referência <b>${p.net}</b>.</p>
+      ${alerta}
+      <div class="scorebig">${geral}%</div><div class="scorelabel">conformidade nas etapas avaliadas (${ativas.length===2?'Etapas 1 e 2 — implementação inicial obrigatória':'Etapas 1 a 5'}) <span class="badge ${status(geral)[1]}">${status(geral)[0]}</span></div>
+      ${ativas.map(e=>{const s=porEtapa[e],[l,b,c]=status(s);return `
+        <div class="bar"><div class="top"><span>${ETAPAS[e]}</span><span><span class="badge ${b}">${l}</span> ${s}%</span></div>
+        <div class="track"><div class="fill" style="width:${s}%;background:${c}"></div></div></div>`}).join('')}
+      ${saasNote}
+    </div>
+    <div class="card"><h2>Pontos de adequação identificados (${gaps.length})</h2>
+      ${gaps.length?gaps.map(r=>`<div class="gap g${r.peso}"><b>${r.peso===3?'CRÍTICO':r.peso===2?'IMPORTANTE':'COMPLEMENTAR'}</b> · ${r.tec}
+        <div class="gref">Etapa ${r.etapa} · Anexo IV, ${r.ref} · situação: ${{sim:'ok',parcial:'parcialmente atendido',nao:'não atendido',ns:'não identificado — requer levantamento técnico'}[resp[r.id]]}</div></div>`).join('')
+      :'<p>Nenhum gap identificado nos requisitos avaliados. Recomenda-se validação técnica das evidências.</p>'}
+    </div>
+    ${identOps.length?`<div class="card"><h2>Recomendações de suporte à conformidade — Identidade digital</h2>
+      <p style="font-size:.82rem;color:#777;margin-bottom:8px">Itens não pontuados no Provimento, porém vinculados aos deveres de rastreabilidade, controle de dados e atendimento aos titulares.</p>
+      ${identOps.map(k=>{const p=IDENT_PITCH[k];return `<div class="gap g2"><b>OFERTA · ${p.t}</b><br>${p.d}
+        <div class="gref" style="margin-top:4px">💬 ${p.a}</div>
+        <div class="gref">situação declarada: ${{parcial:'parcial',nao:'não possui',ns:'não identificado'}[identVal(k)]}</div></div>`}).join('')}
+    </div>`:''}
+    <div class="cta noprint"><p style="font-size:1.1rem;font-weight:600">Diagnóstico concluído — use os gaps acima para montar a proposta</p>
+      <p style="opacity:.85;font-size:.9rem">Uso interno. Baseado em informações declaradas na entrevista; a validação técnica ocorre na visita/levantamento.</p>
+      <button type="button" style="width:auto;background:#fff;color:var(--azul)" onclick="print()">Salvar em PDF</button>
+      <button type="button" style="width:auto;background:transparent;border:1px solid #fff;margin-left:8px" onclick="location.reload()">Novo diagnóstico</button>
+    </div>`;
+  document.getElementById('form').style.display='none';
+  document.getElementById('report').style.display='block';
+  scrollTo({top:0,behavior:'smooth'});
+});
+</script>
+</body>
+</html>

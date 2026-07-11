@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ArchLogo,
+  ClipboardCheckIcon,
   GridIcon,
   KeyIcon,
   SignOutIcon,
@@ -78,6 +79,13 @@ export function AppSidebar({
       <Link href="/cofre" className={navClass(pathname.startsWith("/cofre"))}>
         <KeyIcon />
         Cofre
+      </Link>
+      <Link
+        href="/diagnosticos"
+        className={navClass(pathname.startsWith("/diagnosticos"))}
+      >
+        <ClipboardCheckIcon />
+        Diagnósticos
       </Link>
       <Link href="/time" className={navClass(pathname === "/time")}>
         <UsersIcon />
