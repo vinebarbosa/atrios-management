@@ -2,15 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { RealtimeEvent } from "./types";
+import { pusherBrowser } from "./pusher-browser";
+import { REALTIME_EVENT, type RealtimeEvent } from "./types";
 
 export type RealtimeStatus = "connecting" | "open" | "reconnecting";
 
 /**
- * Assina o canal SSE `channel`. Reconecta sozinho (backoff + jitter) após queda
- * ou o corte periódico imposto pelo `maxDuration` da function. Chama `onResync`
- * ao reconectar e ao voltar a aba para o primeiro plano, para cobrir eventos
- * perdidos durante a desconexão. Retorna o estado da conexão para a UI.
+ * Assina o canal Pusher `channel`. O pusher-js cuida da reconexão sozinho;
+ * `onResync` é chamado ao reconectar (para cobrir eventos perdidos durante a
+ * queda) e ao voltar a aba para o primeiro plano. Retorna o estado da conexão.
  */
 export function useRealtime(
   channel: string,
@@ -18,67 +18,47 @@ export function useRealtime(
   onResync?: () => void,
 ): RealtimeStatus {
   const [status, setStatus] = useState<RealtimeStatus>("connecting");
-  // refs para os callbacks: evitam reabrir o EventSource a cada render.
+  // refs para os callbacks: evitam re-assinar o canal a cada render.
   const onEventRef = useRef(onEvent);
   const onResyncRef = useRef(onResync);
   onEventRef.current = onEvent;
   onResyncRef.current = onResync;
 
   useEffect(() => {
-    let es: EventSource | null = null;
-    let retry = 0;
-    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-    let stopped = false;
-    let everConnected = false;
+    const pusher = pusherBrowser();
+    if (!pusher) return; // realtime desligado (sem chaves)
 
-    const connect = () => {
-      if (stopped) return;
-      es = new EventSource(
-        `/api/realtime?channel=${encodeURIComponent(channel)}`,
-      );
+    const ch = pusher.subscribe(channel);
+    const handler = (data: RealtimeEvent) => onEventRef.current?.(data);
+    ch.bind(REALTIME_EVENT, handler);
 
-      es.onopen = () => {
-        retry = 0;
+    let wasConnected = pusher.connection.state === "connected";
+    const onState = () => {
+      const s = pusher.connection.state;
+      if (s === "connected") {
         setStatus("open");
-        if (everConnected) onResyncRef.current?.(); // reconexão: ressincroniza
-        everConnected = true;
-      };
-
-      es.onmessage = (ev) => {
-        if (!ev.data) return;
-        try {
-          onEventRef.current?.(JSON.parse(ev.data) as RealtimeEvent);
-        } catch {}
-      };
-
-      es.onerror = () => {
-        // Assume o reconnect no lugar do EventSource nativo para controlar o
-        // backoff (e cobrir o corte de duração da function).
-        es?.close();
+        if (!wasConnected) onResyncRef.current?.(); // reconectou: ressincroniza
+        wasConnected = true;
+      } else if (s === "connecting" || s === "initialized") {
+        setStatus("connecting");
+      } else {
         setStatus("reconnecting");
-        const delay = Math.min(1000 * 2 ** retry, 15_000) + Math.random() * 500;
-        retry += 1;
-        reconnectTimer = setTimeout(connect, delay);
-      };
-    };
-
-    const onVisibility = () => {
-      if (document.visibilityState !== "visible") return;
-      onResyncRef.current?.(); // primeiro plano: ressincroniza
-      if (!es || es.readyState === EventSource.CLOSED) {
-        if (reconnectTimer) clearTimeout(reconnectTimer);
-        connect();
+        wasConnected = false;
       }
     };
+    onState();
+    pusher.connection.bind("state_change", onState);
 
-    connect();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") onResyncRef.current?.();
+    };
     document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
-      stopped = true;
-      if (reconnectTimer) clearTimeout(reconnectTimer);
+      ch.unbind(REALTIME_EVENT, handler);
+      pusher.unsubscribe(channel);
+      pusher.connection.unbind("state_change", onState);
       document.removeEventListener("visibilitychange", onVisibility);
-      es?.close();
     };
   }, [channel]);
 

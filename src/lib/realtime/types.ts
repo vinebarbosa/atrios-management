@@ -1,6 +1,6 @@
 /** Evento de mudança transmitido por realtime (payload pequeno — só o "sino"). */
 export interface RealtimeEvent {
-  /** Canal lógico (ex.: "product:<id>", "cofre"). */
+  /** Canal lógico (ex.: "private-product-<id>", "private-cofre"). */
   channel: string;
   /** Tipo do evento (ex.: "card.updated", "changed"). */
   type: string;
@@ -12,14 +12,15 @@ export interface RealtimeEvent {
   ts: number;
 }
 
-/** Canal Postgres físico usado por LISTEN/NOTIFY (um só, canal lógico vai no payload). */
-export const PG_CHANNEL = "realtime";
+/** Nome do evento Pusher (um só; o tipo específico vai no payload). */
+export const REALTIME_EVENT = "change";
 
-/** Constrói os nomes dos canais lógicos. */
+// Canais privados do Pusher: exigem o prefixo `private-` e não aceitam `:`
+// (só a-z A-Z 0-9 _ - = @ , . ;). Ids são UUIDs, cujos hífens são válidos.
 export const channels = {
-  product: (productId: string) => `product:${productId}`,
-  cofre: "cofre",
-  time: "time",
-  diagnosticos: "diagnosticos",
-  documents: (productId: string) => `documents:${productId}`,
+  product: (productId: string) => `private-product-${productId}`,
+  cofre: "private-cofre",
+  time: "private-time",
+  diagnosticos: "private-diagnosticos",
+  documents: (productId: string) => `private-documents-${productId}`,
 } as const;
