@@ -31,9 +31,11 @@ export async function getDiagnostico(id: string) {
 }
 
 export async function getRequisitosAplicaveis(
-  classe: number,
+  classe: number | null,
   etapas: number[],
 ) {
+  // Lead sem classe (pré-cadastro) não tem requisitos aplicáveis ainda.
+  if (classe == null) return [];
   const todos = await db.query.requisito.findMany({
     where: eq(schema.requisito.ativo, true),
     orderBy: asc(schema.requisito.ordem),
@@ -118,12 +120,17 @@ function montarAlerta(
 }
 
 export async function getRelatorio(diag: DiagnosticoRow): Promise<Relatorio> {
+  // Só diagnósticos com classe definida geram relatório (leads "novo" usam a
+  // LeadNovoView e nunca chegam aqui).
+  if (diag.classe == null)
+    throw new Error("Diagnóstico sem classe não gera relatório.");
+  const classe = diag.classe;
   const etapas = etapasDoEscopo(diag.escopo);
   const [requisitos, parametroRows] = await Promise.all([
-    getRequisitosAplicaveis(diag.classe, etapas),
+    getRequisitosAplicaveis(classe, etapas),
     db.query.parametroNorma.findMany(),
   ]);
-  const parametros = parametrosParaClasse(parametroRows, diag.classe, diag.uf);
+  const parametros = parametrosParaClasse(parametroRows, classe, diag.uf);
   const respostas = new Map<string, RespostaValor>(
     diag.respostas.map((r) => [r.requisitoId, r.valor]),
   );

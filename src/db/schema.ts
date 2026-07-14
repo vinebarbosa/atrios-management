@@ -484,11 +484,15 @@ export type DiagnosticoModelo =
   | "compartilhada"
   | "nao_sei";
 export type DiagnosticoStatusFunil =
+  | "novo"
   | "em_andamento"
   | "concluido"
   | "proposta"
   | "ganho"
   | "perdido";
+// "interno": cadastrado pela equipe na call. "pre-cadastro": lead da landing
+// pública (/diagnostico) — entra no funil como "novo" e a equipe completa.
+export type DiagnosticoOrigem = "interno" | "pre-cadastro";
 export type IdentidadeItem = "site" | "email" | "fone";
 
 /** Condições especiais do requisito (ex.: nota de dispensa de pentest em SaaS). */
@@ -544,15 +548,25 @@ export const diagnostico = pgTable(
     cns: text("cns"),
     municipio: text("municipio"),
     uf: text("uf").notNull(),
-    classe: integer("classe").notNull(),
+    // nulo no lead de pré-cadastro (a landing não pergunta arrecadação) — a
+    // equipe define a classe ao trabalhar o lead.
+    classe: integer("classe"),
     subclasse: text("subclasse"),
+    // atribuição da serventia (Notas, RI, RCPN…) — coletada no pré-cadastro,
+    // opcional no cadastro interno.
+    atribuicao: text("atribuicao"),
     modeloSolucao: text("modelo_solucao")
       .$type<DiagnosticoModelo>()
       .notNull()
       .default("nao_sei"),
     contatoNome: text("contato_nome").notNull(),
+    contatoCargo: text("contato_cargo"),
     contatoEmail: text("contato_email"),
     contatoWhatsapp: text("contato_whatsapp"),
+    origem: text("origem")
+      .$type<DiagnosticoOrigem>()
+      .notNull()
+      .default("interno"),
     escopo: text("escopo").$type<DiagnosticoEscopo>().notNull(),
     // preenchido ao concluir (snapshot do motor na conclusão)
     scoreGeral: integer("score_geral"),
@@ -660,3 +674,36 @@ export const respostaIdentidadeRelations = relations(
 export const requisitoRelations = relations(requisito, ({ many }) => ({
   respostas: many(resposta),
 }));
+
+/* ---- Pré-cadastro público (landing /diagnostico) ------------------------ */
+
+export type PreCadastroResultado =
+  | "created"
+  | "updated"
+  | "rejected"
+  | "honeypot"
+  | "rate_limited";
+
+// Auditoria + rate limit do formulário público. Uma linha por tentativa de
+// envio (inclusive rejeitadas/honeypot): alimenta o limite por IP e o log
+// mínimo exigido (data, IP truncado). O lead em si vive em `diagnostico`.
+export const preCadastroSubmission = pgTable(
+  "pre_cadastro_submission",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    // IP truncado (/24 em IPv4) — LGPD: não guardamos o IP completo.
+    ip: text("ip").notNull(),
+    email: text("email"),
+    whatsapp: text("whatsapp"),
+    diagnosticoId: text("diagnostico_id").references(() => diagnostico.id, {
+      onDelete: "set null",
+    }),
+    resultado: text("resultado").$type<PreCadastroResultado>().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("pre_cadastro_submission_ip_idx").on(table.ip, table.createdAt),
+  ],
+);

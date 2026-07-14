@@ -34,6 +34,7 @@ const MODELOS: DiagnosticoModelo[] = [
 ];
 const ESCOPOS: DiagnosticoEscopo[] = ["inicial", "completo"];
 const STATUS_FUNIL: DiagnosticoStatusFunil[] = [
+  "novo",
   "em_andamento",
   "concluido",
   "proposta",
@@ -189,6 +190,9 @@ export async function concluirDiagnostico(
   if (!diag) return { error: "Diagnóstico não encontrado." };
   if (diag.statusFunil !== "em_andamento")
     return { error: "Diagnóstico já concluído." };
+  if (diag.classe == null)
+    return { error: "Defina a classe do diagnóstico antes de concluir." };
+  const classe = diag.classe;
 
   const etapas = etapasDoEscopo(diag.escopo);
   const requisitos = await db.query.requisito.findMany({
@@ -196,7 +200,7 @@ export async function concluirDiagnostico(
     columns: { id: true, etapa: true, peso: true, classes: true },
   });
   const aplicaveis = requisitos.filter(
-    (r) => etapas.includes(r.etapa) && r.classes.includes(diag.classe),
+    (r) => etapas.includes(r.etapa) && r.classes.includes(classe),
   );
 
   const respondidos = new Set(diag.respostas.map((r) => r.requisitoId));
@@ -253,13 +257,19 @@ export async function setStatusFunil(
 ): Promise<Result> {
   const session = await requireSession();
   if (!session) return { error: "Sessão expirada." };
-  if (!STATUS_FUNIL.includes(status) || status === "em_andamento")
+  if (
+    !STATUS_FUNIL.includes(status) ||
+    status === "em_andamento" ||
+    status === "novo"
+  )
     return { error: "Status inválido — use “Reabrir” para voltar a editar." };
   const diag = await db.query.diagnostico.findFirst({
     where: eq(schema.diagnostico.id, diagnosticoId),
     columns: { statusFunil: true },
   });
   if (!diag) return { error: "Diagnóstico não encontrado." };
+  if (diag.statusFunil === "novo")
+    return { error: "Complete o cadastro do lead antes de movê-lo no funil." };
   if (diag.statusFunil === "em_andamento")
     return { error: "Conclua o diagnóstico antes de mover no funil." };
   await db

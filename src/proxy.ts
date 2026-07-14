@@ -3,8 +3,10 @@ import { type NextRequest, NextResponse } from "next/server";
 
 // Rotas alcançáveis sem sessão. Checagem otimista (só presença do cookie):
 // a verificação real acontece no AppShell/actions com auth.api.getSession.
+// `diagnostico` (singular) é a landing pública de pré-cadastro; o `(\/|$)` evita
+// casar `/diagnosticos` (plural, módulo interno autenticado).
 const PUBLIC =
-  /^\/(login|esqueci-senha|redefinir-senha|convite|sem-convite|termos|privacidade|api\/auth)(\/|$)/;
+  /^\/(login|esqueci-senha|redefinir-senha|convite|sem-convite|termos|privacidade|diagnostico|api\/auth)(\/|$)/;
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

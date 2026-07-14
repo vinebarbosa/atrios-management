@@ -8,6 +8,7 @@ import {
 } from "@/lib/diagnostico/constants";
 import { etapasDoEscopo } from "@/lib/diagnostico/motor";
 import { EntrevistaForm } from "./entrevista-form";
+import { LeadNovoView } from "./lead-novo";
 import {
   getDiagnostico,
   getRelatorio,
@@ -23,6 +24,9 @@ export default async function DiagnosticoPage({
   const { id } = await params;
   const diag = await getDiagnostico(id);
   if (!diag) notFound();
+
+  // Lead do pré-cadastro público: sem classe ainda, então não há relatório.
+  if (diag.statusFunil === "novo") return <LeadNovoView diag={diag} />;
 
   if (diag.statusFunil !== "em_andamento") {
     const relatorio = await getRelatorio(diag);

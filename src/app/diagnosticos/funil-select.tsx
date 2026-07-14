@@ -38,7 +38,9 @@ export function FunilSelect({
           });
         }}
       >
-        {STATUS_FUNIL.filter((s) => s.value !== "em_andamento").map((s) => (
+        {STATUS_FUNIL.filter(
+          (s) => s.value !== "em_andamento" && s.value !== "novo",
+        ).map((s) => (
           <option key={s.value} value={s.value}>
             {s.label}
           </option>

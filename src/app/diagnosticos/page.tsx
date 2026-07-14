@@ -141,7 +141,7 @@ export default async function DiagnosticosPage({
                         ) : null}
                       </td>
                       <td className="px-3 py-2.5 text-[12.5px] text-fg-5">
-                        {d.classe}
+                        {d.classe ?? "—"}
                         {d.subclasse ?? ""}
                       </td>
                       <td className="px-3 py-2.5 text-[12.5px] text-fg-7">
@@ -164,10 +164,19 @@ export default async function DiagnosticosPage({
                         )}
                       </td>
                       <td className="px-3 py-2.5">
-                        {d.statusFunil === "em_andamento" ? (
+                        {d.statusFunil === "em_andamento" ||
+                        d.statusFunil === "novo" ? (
                           <span className="inline-flex items-center gap-1.5 text-[12px] text-fg-6">
-                            <span className="size-1.5 rounded-full bg-[#8a8f98]" />
-                            {STATUS_FUNIL_LABEL.em_andamento}
+                            <span
+                              className="size-1.5 rounded-full"
+                              style={{
+                                background:
+                                  d.statusFunil === "novo"
+                                    ? "#8b93ec"
+                                    : "#8a8f98",
+                              }}
+                            />
+                            {STATUS_FUNIL_LABEL[d.statusFunil]}
                           </span>
                         ) : (
                           <FunilSelect

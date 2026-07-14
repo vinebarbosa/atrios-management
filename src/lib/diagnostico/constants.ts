@@ -87,6 +87,7 @@ export const STATUS_FUNIL: {
   label: string;
   color: string;
 }[] = [
+  { value: "novo", label: "Novo", color: "#8b93ec" },
   { value: "em_andamento", label: "Em andamento", color: "#8a8f98" },
   { value: "concluido", label: "Concluído", color: "#4ea7fc" },
   { value: "proposta", label: "Proposta enviada", color: "#f2c94c" },
