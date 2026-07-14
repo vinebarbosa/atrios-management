@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
 import type { RespostaValor } from "@/db/schema";
 import {
+  baseArrecadacao,
   calcularPrazos,
   calcularScores,
+  classePorArrecadacao,
   etapasDoEscopo,
   ordenarGaps,
   PRORROGACAO_MAX_DIAS,
   parametrosParaClasse,
   statusPorScore,
+  tetosDaNorma,
 } from "./motor";
 
 // Requisitos das Etapas 1 e 2 aplicáveis à classe 2 (mesmos pesos do seed —
@@ -177,5 +180,55 @@ describe("parametrosParaClasse", () => {
     expect(() => parametrosParaClasse(acimaDoTeto, 2, "RN")).toThrow(
       /art\. 21/,
     );
+  });
+});
+
+describe("classePorArrecadacao (tetos 100k / 500k)", () => {
+  it("classifica nos limites exatos dos tetos", () => {
+    expect(classePorArrecadacao(100_000, 100_000, 500_000)).toBe(1);
+    expect(classePorArrecadacao(100_000.01, 100_000, 500_000)).toBe(2);
+    expect(classePorArrecadacao(500_000, 100_000, 500_000)).toBe(2);
+    expect(classePorArrecadacao(500_000.01, 100_000, 500_000)).toBe(3);
+  });
+
+  it("valores típicos", () => {
+    expect(classePorArrecadacao(0, 100_000, 500_000)).toBe(1);
+    expect(classePorArrecadacao(376_172.77, 100_000, 500_000)).toBe(2);
+    expect(classePorArrecadacao(9_000_000, 100_000, 500_000)).toBe(3);
+  });
+});
+
+describe("baseArrecadacao (fallback do semestre zerado)", () => {
+  it("usa o semestre atual quando ele tem arrecadação", () => {
+    expect(baseArrecadacao(376_172.77, 169_932.35)).toBe(376_172.77);
+  });
+
+  it("cai no anterior quando o atual veio zerado", () => {
+    expect(baseArrecadacao(0, 169_932.35)).toBe(169_932.35);
+  });
+
+  it("um semestre atual zerado que classificaria como C1 usa o anterior (C2)", () => {
+    // atual=0 → base=200k → C2, não C1
+    expect(
+      classePorArrecadacao(baseArrecadacao(0, 200_000), 100_000, 500_000),
+    ).toBe(2);
+  });
+});
+
+describe("tetosDaNorma", () => {
+  const rows = [
+    { chave: "teto_classe_1", valor: "100000", uf: null, descricao: null },
+    { chave: "teto_classe_2", valor: "500000", uf: null, descricao: null },
+  ];
+
+  it("lê os tetos nacionais de parametro_norma", () => {
+    expect(tetosDaNorma(rows)).toEqual({
+      tetoClasse1: 100_000,
+      tetoClasse2: 500_000,
+    });
+  });
+
+  it("falha explícita quando o seed não rodou", () => {
+    expect(() => tetosDaNorma([])).toThrow(/Tetos de classe ausentes/);
   });
 });

@@ -180,6 +180,24 @@ export function ClipboardCheckIcon({ size = 15 }: IconProps) {
   );
 }
 
+export function LandmarkIcon({ size = 15 }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      aria-hidden="true"
+    >
+      <path d="M8 2 2.5 5h11L8 2Z" strokeLinejoin="round" />
+      <path d="M4 7v4.5M6.7 7v4.5M9.3 7v4.5M12 7v4.5" strokeLinecap="round" />
+      <path d="M2.5 13.5h11" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function GridIcon({ size = 15 }: IconProps) {
   return (
     <svg

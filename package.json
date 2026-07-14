@@ -5,12 +5,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "vercel-build": "drizzle-kit migrate && node src/db/seed-provimento.ts && next build",
+    "vercel-build": "drizzle-kit migrate && node src/db/seed-provimento.ts && node src/db/seed-serventias.ts && next build",
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write",
     "db:seed": "node --env-file=.env src/db/seed.ts",
     "db:seed:provimento": "node --env-file=.env src/db/seed-provimento.ts",
+    "db:seed:serventias": "node --env-file=.env src/db/seed-serventias.ts",
     "test": "vitest run"
   },
   "dependencies": {

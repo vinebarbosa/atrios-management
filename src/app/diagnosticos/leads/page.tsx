@@ -8,18 +8,40 @@ import * as schema from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { formatRelative } from "@/lib/product-constants";
 import { channels } from "@/lib/realtime/types";
+import { type ServentiaOpcao, VincularServentia } from "./vincular-serventia";
 
 // Leads do pré-cadastro público (/diagnostico) — status "novo", ainda sem
 // classe. Fica separado da listagem principal (só diagnósticos de verdade)
 // porque o lead ainda não passou pela call nem tem roteiro aplicável.
 
+// Chave de município tolerante a caixa/acentos (lead ↔ serventia).
+function normalizarMunicipio(m: string): string {
+  return m.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
+}
+
 export default async function LeadsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
 
-  const leads = await db.query.diagnostico.findMany({
-    where: eq(schema.diagnostico.statusFunil, "novo"),
-    orderBy: desc(schema.diagnostico.createdAt),
-  });
+  const [leads, serventias] = await Promise.all([
+    db.query.diagnostico.findMany({
+      where: eq(schema.diagnostico.statusFunil, "novo"),
+      orderBy: desc(schema.diagnostico.createdAt),
+    }),
+    db.query.serventia.findMany({
+      columns: { cns: true, nome: true, cidade: true, situacao: true },
+    }),
+  ]);
+
+  // município normalizado → serventias, para o dropdown de vínculo
+  const porMunicipio = new Map<string, ServentiaOpcao[]>();
+  for (const s of serventias) {
+    const chave = normalizarMunicipio(s.cidade);
+    const lista = porMunicipio.get(chave) ?? [];
+    lista.push({ cns: s.cns, nome: s.nome, situacao: s.situacao });
+    porMunicipio.set(chave, lista);
+  }
+  const opcoesDoLead = (municipio: string | null): ServentiaOpcao[] =>
+    municipio ? (porMunicipio.get(normalizarMunicipio(municipio)) ?? []) : [];
 
   return (
     <>
@@ -55,6 +77,7 @@ export default async function LeadsPage() {
                   <th className="px-3 py-2.5 font-medium">Município / UF</th>
                   <th className="px-3 py-2.5 font-medium">Atribuição</th>
                   <th className="px-3 py-2.5 font-medium">Recebido</th>
+                  <th className="px-3 py-2.5 font-medium">Serventia</th>
                 </tr>
               </thead>
               <tbody>
@@ -87,6 +110,13 @@ export default async function LeadsPage() {
                     </td>
                     <td className="px-3 py-2.5 text-[12px] text-fg-8">
                       {formatRelative(lead.createdAt)}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <VincularServentia
+                        leadId={lead.id}
+                        cnsAtual={lead.cns}
+                        opcoes={opcoesDoLead(lead.municipio)}
+                      />
                     </td>
                   </tr>
                 ))}

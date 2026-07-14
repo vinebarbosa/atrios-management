@@ -14,7 +14,8 @@
       "!dist",
       "!build",
       "!tmp",
-      "!drizzle"
+      "!drizzle",
+      "!src/db/serventias-rn.json"
     ]
   },
   "formatter": {

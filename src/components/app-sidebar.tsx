@@ -7,6 +7,7 @@ import {
   ClipboardCheckIcon,
   GridIcon,
   KeyIcon,
+  LandmarkIcon,
   SignOutIcon,
   UsersIcon,
 } from "@/components/icons";
@@ -86,6 +87,13 @@ export function AppSidebar({
       >
         <ClipboardCheckIcon />
         Diagnósticos
+      </Link>
+      <Link
+        href="/serventias"
+        className={navClass(pathname.startsWith("/serventias"))}
+      >
+        <LandmarkIcon />
+        Serventias
       </Link>
       <Link href="/time" className={navClass(pathname === "/time")}>
         <UsersIcon />

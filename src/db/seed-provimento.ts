@@ -428,6 +428,20 @@ const PARAMETROS: SeedParametro[] = [
     descricao:
       "Entrada em vigor do Provimento CNJ n. 213 (assinado em 20/02/2026, publicado no DJe/CNJ n. 40/2026 de 23/02/2026) — base de contagem dos prazos.",
   },
+  // art. 16 — tetos de arrecadação semestral que separam as classes 1/2/3.
+  // Base do enquadramento estimado das serventias (motor.classePorArrecadacao).
+  {
+    chave: "teto_classe_1",
+    valor: "100000",
+    descricao:
+      "Teto de arrecadação semestral da Classe 1 (art. 16, I) — até este valor a serventia é estimada como Classe 1.",
+  },
+  {
+    chave: "teto_classe_2",
+    valor: "500000",
+    descricao:
+      "Teto de arrecadação semestral da Classe 2 (art. 16, II) — acima dele a serventia é estimada como Classe 3.",
+  },
   // art. 20 — Etapas 1+2 obrigatórias, em dias a partir da vigência
   { chave: "prazo_art20_dias_classe_1", valor: "210" },
   { chave: "prazo_art20_dias_classe_2", valor: "150" },

@@ -282,6 +282,33 @@ export async function setStatusFunil(
   return {};
 }
 
+/* ---- Vínculo com a base de serventias ------------------------------------ */
+
+// Vincula um lead/diagnóstico a uma serventia da base de prospecção (grava o
+// CNS). Vinculação MANUAL pelo dropdown do município — sem fuzzy matching.
+export async function vincularServentia(
+  diagnosticoId: string,
+  cns: string,
+): Promise<Result> {
+  const session = await requireSession();
+  if (!session) return { error: "Sessão expirada." };
+  const serventia = await db.query.serventia.findFirst({
+    where: eq(schema.serventia.cns, cns),
+    columns: { cns: true },
+  });
+  if (!serventia) return { error: "Serventia não encontrada." };
+  const [updated] = await db
+    .update(schema.diagnostico)
+    .set({ cns })
+    .where(eq(schema.diagnostico.id, diagnosticoId))
+    .returning();
+  if (!updated) return { error: "Lead não encontrado." };
+  revalidatePath("/diagnosticos/leads");
+  revalidatePath("/serventias");
+  await notifyDiagnosticos(session.user.id, diagnosticoId);
+  return {};
+}
+
 export async function deleteDiagnostico(
   diagnosticoId: string,
 ): Promise<Result> {

@@ -1,9 +1,11 @@
 import { relations } from "drizzle-orm";
 import {
   boolean,
+  date,
   index,
   integer,
   jsonb,
+  numeric,
   pgTable,
   text,
   timestamp,
@@ -538,6 +540,45 @@ export const parametroNorma = pgTable(
   (table) => [index("parametro_norma_chave_idx").on(table.chave)],
 );
 
+/* ---- Serventias (base de prospecção extrajudicial) ---------------------- */
+
+// Espelho da API pública do Justiça Aberta/CNJ (extração manual → seed por
+// upsert de CNS, idempotente). Classe, prazo, dias restantes e "vaga" são
+// DERIVADOS na leitura (motor + parametro_norma), nunca colunas. Sem status
+// comercial próprio: o funil vive em diagnostico.status_funil — uma serventia
+// tem, ou não, um diagnóstico.
+export const serventia = pgTable(
+  "serventia",
+  {
+    // CNS com zero à esquerda — string, nunca integer.
+    cns: text("cns").primaryKey(),
+    nome: text("nome").notNull(),
+    cidade: text("cidade").notNull(),
+    // "RN" fixo por ora; a coluna existe para os próximos estados.
+    uf: text("uf").notNull().default("RN"),
+    // "PROVIDO" ou vago/interino (VAGO, SOB INTERVENÇÃO, ""…). vaga = != PROVIDO.
+    situacao: text("situacao").notNull().default(""),
+    tipo: text("tipo"),
+    // especialidades separadas por " | " (string crua da API)
+    natureza: text("natureza"),
+    telefone: text("telefone"),
+    email: text("email"),
+    endereco: text("endereco"),
+    responsavel: text("responsavel"),
+    ingresso: date("ingresso"),
+    arrecPeriodo: text("arrec_periodo"),
+    // últimos dois semestres, como a API entrega (numeric → string no driver)
+    arrecAtual: numeric("arrec_atual", { precision: 14, scale: 2 }),
+    arrecAnterior: numeric("arrec_anterior", { precision: 14, scale: 2 }),
+    atos: integer("atos"),
+    sincronizadoEm: timestamp("sincronizado_em").defaultNow().notNull(),
+  },
+  (table) => [
+    index("serventia_uf_idx").on(table.uf),
+    index("serventia_cidade_idx").on(table.cidade),
+  ],
+);
+
 export const diagnostico = pgTable(
   "diagnostico",
   {
@@ -545,7 +586,9 @@ export const diagnostico = pgTable(
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
     serventia: text("serventia").notNull(),
-    cns: text("cns"),
+    // FK para a base de prospecção (nullable: pode haver diagnóstico de
+    // serventia fora da base, e leads do pré-cadastro nascem sem CNS).
+    cns: text("cns").references(() => serventia.cns, { onDelete: "set null" }),
     municipio: text("municipio"),
     uf: text("uf").notNull(),
     // nulo no lead de pré-cadastro (a landing não pergunta arrecadação) — a
@@ -646,8 +689,16 @@ export const diagnosticoRelations = relations(diagnostico, ({ one, many }) => ({
     fields: [diagnostico.criadoPorId],
     references: [user.id],
   }),
+  serventiaRef: one(serventia, {
+    fields: [diagnostico.cns],
+    references: [serventia.cns],
+  }),
   respostas: many(resposta),
   respostasIdentidade: many(respostaIdentidade),
+}));
+
+export const serventiaRelations = relations(serventia, ({ many }) => ({
+  diagnosticos: many(diagnostico),
 }));
 
 export const respostaRelations = relations(resposta, ({ one }) => ({

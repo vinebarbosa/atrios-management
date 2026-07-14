@@ -176,3 +176,43 @@ export function parametrosParaClasse(
       : null,
   };
 }
+
+/* ---- Classe por arrecadação (art. 16) ----------------------------------- */
+
+/** Base de enquadramento: se o último semestre veio zerado, usa o anterior. */
+export function baseArrecadacao(atual: number, anterior: number): number {
+  return atual > 0 ? atual : anterior;
+}
+
+/**
+ * Classe estimada pela arrecadação (tetos vindos de parametro_norma). É uma
+ * ESTIMATIVA para priorização comercial — o enquadramento oficial é o
+ * declarado pela própria serventia (art. 16 §1º).
+ */
+export function classePorArrecadacao(
+  base: number,
+  tetoClasse1: number,
+  tetoClasse2: number,
+): number {
+  if (base <= tetoClasse1) return 1;
+  if (base <= tetoClasse2) return 2;
+  return 3;
+}
+
+export interface TetosNorma {
+  tetoClasse1: number;
+  tetoClasse2: number;
+}
+
+/** Tetos de classe (nacionais) a partir das linhas de parametro_norma. */
+export function tetosDaNorma(rows: ParametroRow[]): TetosNorma {
+  const nacional = (chave: string) =>
+    rows.find((r) => r.chave === chave && r.uf === null)?.valor;
+  const t1 = nacional("teto_classe_1");
+  const t2 = nacional("teto_classe_2");
+  if (!t1 || !t2)
+    throw new Error(
+      "Tetos de classe ausentes em parametro_norma — rode npm run db:seed:provimento.",
+    );
+  return { tetoClasse1: Number(t1), tetoClasse2: Number(t2) };
+}

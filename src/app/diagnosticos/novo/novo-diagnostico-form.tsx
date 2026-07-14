@@ -35,18 +35,35 @@ function Field({
   );
 }
 
-export function NovoDiagnosticoForm() {
+export interface NovoDiagnosticoInitial {
+  serventia?: string;
+  cns?: string;
+  municipio?: string;
+  uf?: string;
+  classe?: number;
+  contatoNome?: string;
+  contatoEmail?: string;
+  contatoWhatsapp?: string;
+}
+
+export function NovoDiagnosticoForm({
+  initial,
+}: {
+  initial?: NovoDiagnosticoInitial;
+}) {
   const router = useRouter();
-  const [serventia, setServentia] = useState("");
-  const [cns, setCns] = useState("");
-  const [municipio, setMunicipio] = useState("");
-  const [uf, setUf] = useState("");
-  const [classe, setClasse] = useState(0);
+  const [serventia, setServentia] = useState(initial?.serventia ?? "");
+  const [cns, setCns] = useState(initial?.cns ?? "");
+  const [municipio, setMunicipio] = useState(initial?.municipio ?? "");
+  const [uf, setUf] = useState(initial?.uf ?? "");
+  const [classe, setClasse] = useState(initial?.classe ?? 0);
   const [subclasse, setSubclasse] = useState("");
   const [modelo, setModelo] = useState<DiagnosticoModelo>("propria");
-  const [contatoNome, setContatoNome] = useState("");
-  const [contatoEmail, setContatoEmail] = useState("");
-  const [contatoWhatsapp, setContatoWhatsapp] = useState("");
+  const [contatoNome, setContatoNome] = useState(initial?.contatoNome ?? "");
+  const [contatoEmail, setContatoEmail] = useState(initial?.contatoEmail ?? "");
+  const [contatoWhatsapp, setContatoWhatsapp] = useState(
+    initial?.contatoWhatsapp ?? "",
+  );
   const [escopo, setEscopo] = useState<DiagnosticoEscopo>("inicial");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
