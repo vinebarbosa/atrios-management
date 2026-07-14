@@ -230,7 +230,22 @@ function Rodape() {
         mais de 10 anos de atuação em serventias extrajudiciais.
       </p>
       <span className="text-[12.5px] text-fg-6">
-        contato@atrioss.com · WhatsApp +55 84 4042-0438 ·{" "}
+        <a
+          href="mailto:contato@atrioss.com"
+          className="text-primary-ink no-underline hover:text-primary-fg"
+        >
+          contato@atrioss.com
+        </a>{" "}
+        · WhatsApp{" "}
+        <a
+          href="https://wa.me/558440420438"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary-ink no-underline hover:text-primary-fg"
+        >
+          +55 84 4042-0438
+        </a>{" "}
+        ·{" "}
         <Link
           href="/privacidade"
           className="text-primary-ink no-underline hover:text-primary-fg"
