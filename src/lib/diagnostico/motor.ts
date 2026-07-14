@@ -73,6 +73,9 @@ export function ordenarGaps<T extends RequisitoPontuavel & { ordem: number }>(
 
 /* ---- Prazos (art. 20 e art. 23) ----------------------------------------- */
 
+/** Teto legal da prorrogação estadual do art. 21: "por até 90 (noventa) dias". */
+export const PRORROGACAO_MAX_DIAS = 90;
+
 export interface ParametrosPrazo {
   vigencia: Date;
   /** art. 20: Etapas 1+2 obrigatórias, em dias */
@@ -152,13 +155,21 @@ export function parametrosParaClasse(
   const prorrogacao = rows.find(
     (r) => r.chave === "prorrogacao_art20_dias" && r.uf === uf.toUpperCase(),
   );
+  const prorrogacaoDias = prorrogacao ? Number(prorrogacao.valor) : 0;
+  // Teto legal do art. 21 ("por até 90 dias"): um valor acima é juridicamente
+  // impossível — falha alto em vez de publicar uma afirmação falsa.
+  if (prorrogacaoDias > PRORROGACAO_MAX_DIAS) {
+    throw new Error(
+      `Prorrogação estadual (${uf}) de ${prorrogacaoDias} dias excede o limite legal do art. 21 (${PRORROGACAO_MAX_DIAS} dias).`,
+    );
+  }
   const tecnicosStr = nacional(`parametros_tecnicos_classe_${classe}`);
   return {
     // meio-dia local evita voltar um dia em fusos negativos
     vigencia: new Date(`${vigenciaStr}T12:00:00`),
     prazoArt20Dias: Number(art20),
     prazoArt23Meses: Number(art23),
-    prorrogacaoDias: prorrogacao ? Number(prorrogacao.valor) : 0,
+    prorrogacaoDias,
     prorrogacaoDescricao: prorrogacao?.descricao ?? null,
     tecnicos: tecnicosStr
       ? (JSON.parse(tecnicosStr) as ParametrosTecnicos)

@@ -5,6 +5,7 @@ import {
   calcularScores,
   etapasDoEscopo,
   ordenarGaps,
+  PRORROGACAO_MAX_DIAS,
   parametrosParaClasse,
   statusPorScore,
 } from "./motor";
@@ -156,5 +157,25 @@ describe("parametrosParaClasse", () => {
 
   it("falha explícita quando o seed não rodou", () => {
     expect(() => parametrosParaClasse(rows, 3, "SP")).toThrow(/classe 3/);
+  });
+
+  it("aceita prorrogação no teto legal de 90 dias", () => {
+    expect(PRORROGACAO_MAX_DIAS).toBe(90);
+    const noTeto = rows.map((r) =>
+      r.chave === "prorrogacao_art20_dias"
+        ? { ...r, valor: String(PRORROGACAO_MAX_DIAS) }
+        : r,
+    );
+    expect(parametrosParaClasse(noTeto, 2, "RN").prorrogacaoDias).toBe(90);
+  });
+
+  it("rejeita prorrogação acima do teto legal do art. 21 (> 90 dias)", () => {
+    // valor juridicamente impossível — art. 21 admite "por até 90 dias".
+    const acimaDoTeto = rows.map((r) =>
+      r.chave === "prorrogacao_art20_dias" ? { ...r, valor: "93" } : r,
+    );
+    expect(() => parametrosParaClasse(acimaDoTeto, 2, "RN")).toThrow(
+      /art\. 21/,
+    );
   });
 });

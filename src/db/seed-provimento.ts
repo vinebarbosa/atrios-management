@@ -422,9 +422,11 @@ type SeedParametro = {
 const PARAMETROS: SeedParametro[] = [
   {
     chave: "vigencia",
-    valor: "2026-02-20",
+    // Entra em vigor na PUBLICAÇÃO (não há vacatio legis, art. 26): DJe/CNJ
+    // n. 40/2026, de 23/02/2026, p. 8-27. 20/02/2026 é só a data de assinatura.
+    valor: "2026-02-23",
     descricao:
-      "Entrada em vigor do Provimento CNJ n. 213, de 20/02/2026 (base de contagem dos prazos).",
+      "Entrada em vigor do Provimento CNJ n. 213 (assinado em 20/02/2026, publicado no DJe/CNJ n. 40/2026 de 23/02/2026) — base de contagem dos prazos.",
   },
   // art. 20 — Etapas 1+2 obrigatórias, em dias a partir da vigência
   { chave: "prazo_art20_dias_classe_1", valor: "210" },
@@ -434,13 +436,13 @@ const PARAMETROS: SeedParametro[] = [
   { chave: "prazo_art23_meses_classe_1", valor: "36" },
   { chave: "prazo_art23_meses_classe_2", valor: "30" },
   { chave: "prazo_art23_meses_classe_3", valor: "24" },
-  // prorrogações estaduais do art. 21 (uma única, até 90 dias)
+  // prorrogações estaduais do art. 21 (uma única, "por até 90 dias" — teto legal)
   {
     chave: "prorrogacao_art20_dias",
-    valor: "93",
+    valor: "90",
     uf: "RN",
     descricao:
-      "Decisão CGJ-RN de 02/07/2026, PP 0000897-12.2026.2.00.0820, a pedido da Anoreg/RN — única prorrogação admitida pelo art. 21, condicionada a medidas mitigatórias e acompanhamento pela Seção de Correição.",
+      "Decisão CGJ-RN de 02/07/2026, PP 0000897-12.2026.2.00.0820, a pedido da Anoreg/RN, que deferiu prorrogação de 90 dias — única admitida pelo art. 21, condicionada a medidas mitigatórias e acompanhamento pela Seção de Correição.",
   },
   // parâmetros técnicos mínimos por classe (linha de cabeçalho do relatório)
   {

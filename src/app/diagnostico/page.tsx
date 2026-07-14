@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/db";
-import {
-  calcularPrazos,
-  type ParametrosPrazo,
-  parametrosParaClasse,
-} from "@/lib/diagnostico/motor";
+import { calcularPrazos, parametrosParaClasse } from "@/lib/diagnostico/motor";
 import { LandingForm } from "./landing-form";
 
 // Landing pública — servida fora da autenticação (ver src/proxy.ts). O envio do
@@ -54,37 +50,18 @@ export interface PrazoRN {
 
 const fmtData = (d: Date) => d.toLocaleDateString("pt-BR");
 
-// Rede de segurança só para o caso do seed do módulo ainda não ter rodado —
-// espelha os parâmetros de src/db/seed-provimento.ts (vigência + prorrogação
-// RN). Se a norma mudar, o ajuste é nos parâmetros, não aqui.
-const FALLBACK: ParametrosPrazo = {
-  vigencia: new Date("2026-02-20T12:00:00"),
-  prazoArt20Dias: 0, // sobrescrito por classe abaixo
-  prazoArt23Meses: 0,
-  prorrogacaoDias: 93,
-};
-const FALLBACK_ART20_DIAS: Record<number, number> = { 3: 90, 2: 150, 1: 210 };
-
+// Fonte ÚNICA: parametro_norma (via motor) — a mesma que o módulo de
+// diagnóstico e os relatórios usam. Nenhuma cópia local dos parâmetros aqui:
+// alterar a norma é um UPDATE numa linha do banco e tudo muda junto.
 async function calcularPrazoRN(): Promise<PrazoRN> {
   const hoje = new Date();
   const piso = (n: number) => Math.max(0, n);
-
-  const rows = await db.query.parametroNorma.findMany().catch(() => []);
-
-  // Se o seed do módulo não rodou (ou o banco falhou), parametrosParaClasse
-  // lança — cada classe cai isoladamente no fallback local.
-  const paraClasse = (classe: number): ParametrosPrazo => {
-    try {
-      return parametrosParaClasse(rows, classe, "RN");
-    } catch {
-      return { ...FALLBACK, prazoArt20Dias: FALLBACK_ART20_DIAS[classe] };
-    }
-  };
+  const rows = await db.query.parametroNorma.findMany();
 
   const porClasse: Record<number, PrazoClasse> = {};
-  let prorrogacaoDias = FALLBACK.prorrogacaoDias;
+  let prorrogacaoDias = 0;
   for (const classe of [3, 2, 1]) {
-    const params = paraClasse(classe);
+    const params = parametrosParaClasse(rows, classe, "RN");
     const prazos = calcularPrazos(params, hoje);
     porClasse[classe] = {
       dias: piso(prazos.diasRestantesInicial),
