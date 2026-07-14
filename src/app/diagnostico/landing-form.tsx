@@ -13,7 +13,15 @@ import {
 } from "@/lib/diagnostico/pre-cadastro";
 import { enviarPreCadastro } from "./actions";
 
-const WHATSAPP_URL = "https://wa.me/558440420438";
+const WHATSAPP_NUMERO = "558440420438";
+
+/** Link do WhatsApp com mensagem pré-preenchida, citando a serventia quando disponível. */
+function whatsappUrl(serventia?: string) {
+  const texto = serventia
+    ? `Olá! Acabei de fazer o pré-cadastro do diagnóstico gratuito do Provimento CNJ 213/2026 pela serventia ${serventia}.`
+    : "Olá! Acabei de fazer o pré-cadastro do diagnóstico gratuito do Provimento CNJ 213/2026.";
+  return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(texto)}`;
+}
 
 const controle =
   "h-12 w-full rounded-field border bg-surface-1 px-3.5 text-[15px] text-fg-1 outline-none transition-colors md:h-[42px] md:px-[13px] md:text-sm";
@@ -141,7 +149,7 @@ export function LandingForm() {
     });
   };
 
-  if (sucesso) return <Sucesso />;
+  if (sucesso) return <Sucesso serventia={campos.nomeServentia} />;
 
   return (
     <div className="flex flex-col gap-4 rounded-panel border border-line-strong bg-surface-card p-5 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.7)] md:gap-[15px] md:p-[26px_26px_24px]">
@@ -317,7 +325,7 @@ export function LandingForm() {
   );
 }
 
-function Sucesso() {
+function Sucesso({ serventia }: { serventia?: string }) {
   return (
     <div className="flex min-h-[420px] flex-col items-center gap-4 rounded-panel border border-line-strong bg-surface-card p-8 text-center shadow-[0_24px_60px_-12px_rgba(0,0,0,0.7)]">
       <div className="mt-2 flex size-[58px] items-center justify-center rounded-full border border-[rgba(76,183,130,0.35)] bg-[rgba(76,183,130,0.10)] shadow-[0_0_24px_rgba(76,183,130,0.15)]">
@@ -345,7 +353,7 @@ function Sucesso() {
         horário da conversa de 20 minutos.
       </p>
       <a
-        href={WHATSAPP_URL}
+        href={whatsappUrl(serventia)}
         target="_blank"
         rel="noopener noreferrer"
         className="mt-1.5 flex h-[50px] w-full max-w-[420px] items-center justify-center gap-2.5 rounded-field border border-[rgba(76,183,130,0.45)] text-[15px] font-semibold text-[#58c48f] no-underline transition-colors hover:bg-[rgba(76,183,130,0.08)] hover:text-[#6fd4a2]"
