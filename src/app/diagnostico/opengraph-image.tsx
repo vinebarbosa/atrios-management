@@ -35,7 +35,7 @@ export default async function OpenGraphImage() {
       }}
     >
       {/* biome-ignore lint/performance/noImgElement: Satori (next/og) exige <img>, não next/image */}
-      <img src={logoSrc} height={46} alt="Átrios" />
+      <img src={logoSrc} height={104} alt="Átrios" />
 
       <div style={{ display: "flex", flexDirection: "column", maxWidth: 900 }}>
         <div
