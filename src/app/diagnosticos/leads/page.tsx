@@ -8,6 +8,7 @@ import * as schema from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { formatRelative } from "@/lib/product-constants";
 import { channels } from "@/lib/realtime/types";
+import { ExcluirLead } from "./excluir-lead";
 import { type ServentiaOpcao, VincularServentia } from "./vincular-serventia";
 
 // Leads do pré-cadastro público (/diagnostico) — status "novo", ainda sem
@@ -78,6 +79,9 @@ export default async function LeadsPage() {
                   <th className="px-3 py-2.5 font-medium">Atribuição</th>
                   <th className="px-3 py-2.5 font-medium">Recebido</th>
                   <th className="px-3 py-2.5 font-medium">Serventia</th>
+                  <th className="w-px px-3 py-2.5">
+                    <span className="sr-only">Ações</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -116,6 +120,12 @@ export default async function LeadsPage() {
                         leadId={lead.id}
                         cnsAtual={lead.cns}
                         opcoes={opcoesDoLead(lead.municipio)}
+                      />
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <ExcluirLead
+                        leadId={lead.id}
+                        serventia={lead.serventia}
                       />
                     </td>
                   </tr>

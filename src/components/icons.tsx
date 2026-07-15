@@ -583,6 +583,34 @@ export function ChainLinkIcon({ size = 14 }: IconProps) {
   );
 }
 
+/** Corrente partida — desfazer um vínculo. Par do ChainLinkIcon. */
+export function ChainLinkOffIcon({ size = 14 }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      aria-hidden="true"
+    >
+      {/* As duas metades do ChainLinkIcon, sem o elo que as unia; os traços
+          curtos marcam a ruptura, senão a corrente só parece aberta. */}
+      <path
+        d="m7.6 4.2 1.3-1.3a2.7 2.7 0 0 1 3.9 3.9l-1.4 1.3"
+        strokeLinecap="round"
+      />
+      <path
+        d="m8.4 11.8-1.3 1.3a2.7 2.7 0 0 1-3.9-3.9l1.4-1.3"
+        strokeLinecap="round"
+      />
+      <path d="M10.9 9.6 12.3 11" strokeLinecap="round" />
+      <path d="M5.1 6.4 3.7 5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function DotsIcon({ size = 14 }: IconProps) {
   return (
     <svg

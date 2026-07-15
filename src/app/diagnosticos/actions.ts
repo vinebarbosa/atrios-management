@@ -286,17 +286,20 @@ export async function setStatusFunil(
 
 // Vincula um lead/diagnóstico a uma serventia da base de prospecção (grava o
 // CNS). Vinculação MANUAL pelo dropdown do município — sem fuzzy matching.
+/** `cns: null` desvincula — o lead volta a não apontar pra serventia nenhuma. */
 export async function vincularServentia(
   diagnosticoId: string,
-  cns: string,
+  cns: string | null,
 ): Promise<Result> {
   const session = await requireSession();
   if (!session) return { error: "Sessão expirada." };
-  const serventia = await db.query.serventia.findFirst({
-    where: eq(schema.serventia.cns, cns),
-    columns: { cns: true },
-  });
-  if (!serventia) return { error: "Serventia não encontrada." };
+  if (cns !== null) {
+    const serventia = await db.query.serventia.findFirst({
+      where: eq(schema.serventia.cns, cns),
+      columns: { cns: true },
+    });
+    if (!serventia) return { error: "Serventia não encontrada." };
+  }
   const [updated] = await db
     .update(schema.diagnostico)
     .set({ cns })
@@ -320,6 +323,9 @@ export async function deleteDiagnostico(
     .returning();
   if (!deleted) return { error: "Diagnóstico não encontrado." };
   revalidatePath("/diagnosticos");
+  // Leads são diagnósticos com status "novo" e vivem na sua própria rota: sem
+  // isto a linha excluída fica na tela até o próximo refresh.
+  revalidatePath("/diagnosticos/leads");
   await notifyDiagnosticos(session.user.id, diagnosticoId);
   return {};
 }
