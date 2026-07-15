@@ -1084,7 +1084,10 @@ function Rodape() {
       <div className={`${wrap} flex flex-col gap-8 py-12`}>
         <div className="grid gap-8 md:grid-cols-[minmax(0,1.6fr)_1fr_1fr]">
           <div className="flex flex-col gap-3">
-            <LogoAtriosLockup className="h-[26px] w-auto text-white" />
+            {/* self-start: sem ele o SVG estica na coluna flex e o desenho se
+                centraliza dentro da caixa (preserveAspectRatio xMidYMid), o que
+                deixa o logo fora do prumo do texto abaixo. */}
+            <LogoAtriosLockup className="h-[26px] w-auto self-start text-white" />
             <p className="max-w-[420px] text-[13px] leading-[1.6] text-fg-6">
               Software sob medida, segurança da informação e LGPD, e a vertical
               de cartórios (Provimento CNJ 213/2026). A mesma competência que
