@@ -3,6 +3,8 @@
 // next/*) — o banco/headers/email entram por injeção em `processarPreCadastro`,
 // o que mantém a regra testável sem infraestrutura.
 
+import { POLITICA_VERSAO } from "../legal";
+
 /** Municípios do RN oferecidos no select (rótulos idênticos ao protótipo). */
 export const MUNICIPIOS_RN = [
   "Natal / RN",
@@ -35,7 +37,8 @@ export type PreCadastroCampo =
   | "atribuicao"
   | "seuNome"
   | "whatsapp"
-  | "email";
+  | "email"
+  | "consentimento";
 
 /** Dados crus vindos do formulário (mais o honeypot). */
 export interface PreCadastroInput {
@@ -46,6 +49,8 @@ export interface PreCadastroInput {
   cargo?: string;
   whatsapp: string;
   email: string;
+  /** aceite explícito da Política de Privacidade (LGPD art. 8º). */
+  consentimento?: boolean;
   /** honeypot — deve chegar vazio; se preenchido, é bot. */
   website?: string;
 }
@@ -63,6 +68,8 @@ export interface LeadNormalizado {
   /** WhatsApp formatado para exibição/armazenamento. */
   whatsapp: string;
   email: string;
+  /** versão da política a que o titular aderiu — prova do consentimento. */
+  politicaVersao: string;
 }
 
 export type ErrosPorCampo = Partial<Record<PreCadastroCampo, string>>;
@@ -70,6 +77,8 @@ export type ErrosPorCampo = Partial<Record<PreCadastroCampo, string>>;
 const OBRIGATORIO = "Campo obrigatório.";
 const EMAIL_INVALIDO = "Informe um e-mail válido.";
 const WHATSAPP_INVALIDO = "Informe um número com DDD, ex.: (84) 9 0000-0000.";
+const CONSENTIMENTO_FALTANDO =
+  "É preciso autorizar o contato para enviar o pré-cadastro.";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -137,6 +146,11 @@ export function validarPreCadastro(input: PreCadastroInput): {
   if (!emailRaw) errors.email = OBRIGATORIO;
   else if (!emailValido(emailRaw)) errors.email = EMAIL_INVALIDO;
 
+  // LGPD art. 8º: o aceite tem de ser inequívoco e vir do titular — nunca
+  // presumido. Sem checkbox marcada, não há base legal para tratar o lead.
+  if (input.consentimento !== true)
+    errors.consentimento = CONSENTIMENTO_FALTANDO;
+
   if (Object.keys(errors).length > 0) return { data: null, errors };
 
   // "Natal / RN" → município "Natal", uf "RN". "Outro município" → uf "RN"
@@ -155,6 +169,7 @@ export function validarPreCadastro(input: PreCadastroInput): {
       whatsappDigitos: soDigitos(whatsappRaw),
       whatsapp: formatarWhatsapp(whatsappRaw),
       email: emailRaw.toLowerCase(),
+      politicaVersao: POLITICA_VERSAO,
     },
     errors: {},
   };
@@ -180,7 +195,10 @@ export interface ProcessarDeps {
     whatsappDigitos: string,
     desde: Date,
   ) => Promise<{ id: string } | null>;
-  criarLead: (lead: LeadNormalizado) => Promise<{ id: string }>;
+  criarLead: (
+    lead: LeadNormalizado,
+    consentimentoEm: Date,
+  ) => Promise<{ id: string }>;
   /** marca atividade no lead duplicado (sobe na listagem do funil). */
   tocarLead: (id: string) => Promise<void>;
   registrarSubmissao: (rec: {
@@ -271,7 +289,7 @@ export async function processarPreCadastro(
   }
 
   // 5. cria o lead + notifica a equipe
-  const { id } = await deps.criarLead(data);
+  const { id } = await deps.criarLead(data, agora);
   await deps.registrarSubmissao({
     ip: ctx.ip,
     email: data.email,

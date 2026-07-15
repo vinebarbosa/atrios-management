@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { db } from "@/db";
-import { calcularPrazos, parametrosParaClasse } from "@/lib/diagnostico/motor";
+import { ContadorPrazos } from "@/components/landing/contador-prazos";
+import { Rodape } from "@/components/landing/rodape";
+import { Topo } from "@/components/landing/topo";
+import { carregarNorma } from "@/lib/landing/queries";
 import { LandingForm } from "./landing-form";
 
 // Landing pública — servida fora da autenticação (ver src/proxy.ts). O envio do
@@ -31,46 +32,6 @@ export const metadata: Metadata = {
 // A landing só renderiza no servidor/na carga — sem revalidação estática, pois
 // o contador depende da data atual.
 export const dynamic = "force-dynamic";
-
-// Logos de parceria só quando a parceria estiver formalizada (config, não
-// hardcode). Default false.
-const SHOW_PARTNERS = process.env.LANDING_SHOW_PARTNERS === "true";
-
-export interface PrazoClasse {
-  dias: number;
-  /** dd/mm/aaaa — sempre derivado do mesmo cálculo que `dias` (nunca hardcode). */
-  data: string;
-}
-
-export interface PrazoRN {
-  porClasse: Record<number, PrazoClasse>;
-  /** dias da prorrogação estadual (art. 21) — mesmo texto exibido na landing. */
-  prorrogacaoDias: number;
-}
-
-const fmtData = (d: Date) => d.toLocaleDateString("pt-BR");
-
-// Fonte ÚNICA: parametro_norma (via motor) — a mesma que o módulo de
-// diagnóstico e os relatórios usam. Nenhuma cópia local dos parâmetros aqui:
-// alterar a norma é um UPDATE numa linha do banco e tudo muda junto.
-async function calcularPrazoRN(): Promise<PrazoRN> {
-  const hoje = new Date();
-  const piso = (n: number) => Math.max(0, n);
-  const rows = await db.query.parametroNorma.findMany();
-
-  const porClasse: Record<number, PrazoClasse> = {};
-  let prorrogacaoDias = 0;
-  for (const classe of [3, 2, 1]) {
-    const params = parametrosParaClasse(rows, classe, "RN");
-    const prazos = calcularPrazos(params, hoje);
-    porClasse[classe] = {
-      dias: piso(prazos.diasRestantesInicial),
-      data: fmtData(prazos.limiteInicial),
-    };
-    prorrogacaoDias = params.prorrogacaoDias;
-  }
-  return { porClasse, prorrogacaoDias };
-}
 
 const PASSOS = [
   {
@@ -115,79 +76,6 @@ const PASSOS = [
   },
 ];
 
-function Topo() {
-  return (
-    <div className="flex items-start justify-between gap-3">
-      {/* logo original é escura; renderizada em branco sobre fundo dark */}
-      {/* biome-ignore lint/performance/noImgElement: asset local, filtro invert */}
-      <img
-        src="/landing/atrios-logo.png"
-        alt="Átrios — Tecnologia e Consultoria"
-        className="h-[46px] w-auto opacity-95 [filter:invert(1)] md:h-[54px]"
-      />
-      {SHOW_PARTNERS && (
-        <div className="flex flex-col items-end gap-1.5">
-          <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-fg-9">
-            Realização / apoio
-          </span>
-          <div className="flex gap-1.5">
-            <span className="flex h-[26px] items-center rounded-[6px] bg-[#f4f5f7] px-2">
-              {/* biome-ignore lint/performance/noImgElement: asset local */}
-              <img
-                src="/landing/arpen-rn.png"
-                alt="Arpen/RN"
-                className="h-4 w-auto"
-              />
-            </span>
-            <span className="flex h-[26px] items-center rounded-[6px] bg-[#f4f5f7] px-2">
-              {/* biome-ignore lint/performance/noImgElement: asset local */}
-              <img
-                src="/landing/anoreg-rn.png"
-                alt="Anoreg/RN"
-                className="h-[13px] w-auto"
-              />
-            </span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Urgencia({ prazo }: { prazo: PrazoRN }) {
-  return (
-    <div className="flex max-w-[560px] flex-col gap-3 rounded-[12px] border border-[rgba(224,108,108,0.22)] bg-[rgba(224,108,108,0.06)] p-4">
-      <div className="flex flex-col gap-0.5">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#e08a8a]">
-          Prazo das Etapas 1 e 2 no RN
-        </span>
-        <span className="text-xs leading-[1.45] text-fg-5">
-          Já com a prorrogação de {prazo.prorrogacaoDias} dias concedida pela
-          Corregedoria (CGJ-RN)
-        </span>
-      </div>
-      <div className="grid grid-cols-3 gap-3">
-        {[3, 2, 1].map((classe) => (
-          <div key={classe} className="flex flex-col">
-            <span className="text-[11.5px] font-medium text-fg-5">
-              Classe {classe}
-            </span>
-            <span className="text-[25px] font-bold leading-[1.15] tracking-[-0.02em] text-danger md:text-[27px]">
-              {prazo.porClasse[classe].dias}
-              <span className="ml-1 text-xs font-medium text-[#c98686]">
-                dias
-              </span>
-            </span>
-            <span className="text-[10.5px] text-[#6b6f7a]">
-              até {prazo.porClasse[classe].data}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function ComoFunciona() {
   return (
     <div className="flex max-w-[560px] flex-col gap-3.5">
@@ -223,43 +111,8 @@ function ComoFunciona() {
   );
 }
 
-function Rodape() {
-  return (
-    <div className="flex max-w-[560px] flex-col gap-2.5 border-t border-line pt-4">
-      <p className="text-[13px] leading-[1.55] text-fg-4">
-        Nossa equipe conhece a prática interna de cartório: profissionais com
-        mais de 10 anos de atuação em serventias extrajudiciais.
-      </p>
-      <span className="text-[12.5px] text-fg-6">
-        <a
-          href="mailto:contato@atrioss.com"
-          className="text-primary-ink no-underline hover:text-primary-fg"
-        >
-          contato@atrioss.com
-        </a>{" "}
-        · WhatsApp{" "}
-        <a
-          href="https://wa.me/558440420438"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary-ink no-underline hover:text-primary-fg"
-        >
-          +55 84 4042-0438
-        </a>{" "}
-        ·{" "}
-        <Link
-          href="/privacidade"
-          className="text-primary-ink no-underline hover:text-primary-fg"
-        >
-          Política de privacidade
-        </Link>
-      </span>
-    </div>
-  );
-}
-
 export default async function DiagnosticoLandingPage() {
-  const prazo = await calcularPrazoRN();
+  const norma = await carregarNorma();
 
   return (
     <main
@@ -277,7 +130,7 @@ export default async function DiagnosticoLandingPage() {
       */}
       <div className="mx-auto grid w-full max-w-[1200px] gap-8 lg:grid-cols-[1fr_minmax(0,520px)] lg:items-start lg:gap-x-14 lg:gap-y-9">
         <div className="flex flex-col gap-7 lg:col-start-1 lg:row-start-1">
-          <Topo />
+          <Topo comoLink />
           <div className="flex flex-col gap-2.5">
             <h1 className="text-pretty text-[27px] font-bold leading-[1.22] tracking-[-0.02em] text-fg-hi md:text-[33px]">
               Diagnóstico gratuito do Provimento CNJ 213/2026
@@ -287,7 +140,7 @@ export default async function DiagnosticoLandingPage() {
               cumpre e o que ainda falta, com relatório por escrito.
             </p>
           </div>
-          <Urgencia prazo={prazo} />
+          <ContadorPrazos norma={norma} className="max-w-[560px]" />
         </div>
 
         <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
@@ -296,7 +149,12 @@ export default async function DiagnosticoLandingPage() {
 
         <div className="flex flex-col gap-7 lg:col-start-1 lg:row-start-2">
           <ComoFunciona />
-          <Rodape />
+          <Rodape className="max-w-[560px]">
+            <p className="text-[13px] leading-[1.55] text-fg-4">
+              Nossa equipe conhece a prática interna de cartório: profissionais
+              com mais de 10 anos de atuação em serventias extrajudiciais.
+            </p>
+          </Rodape>
         </div>
       </div>
     </main>

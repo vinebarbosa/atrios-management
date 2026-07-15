@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { siteUrl } from "@/lib/landing/config";
 import "./globals.css";
 
 // Variable font — covers the 400/450/500/600/700 range used by the system.
@@ -9,6 +10,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  // Base das URLs absolutas de metadata (og:image, canonical) — sem ela o Next
+  // resolve OG image contra localhost e o card do WhatsApp sai sem imagem.
+  metadataBase: new URL(siteUrl()),
   title: "Átrios Management",
   description: "Gestão dos produtos de software da Átrios",
   manifest: "/manifest.json",

@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { POLITICA_ATUALIZADA_EM } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Política de Privacidade — Átrios Management",
   description: "Política de Privacidade da plataforma Átrios Management.",
 };
-
-const ATUALIZADO_EM = "8 de julho de 2026";
 
 function Section({
   title,
@@ -32,7 +31,7 @@ export default function PrivacidadePage() {
         Política de Privacidade
       </h1>
       <p className="mt-2 text-[13px] text-fg-7">
-        Última atualização: {ATUALIZADO_EM}
+        Última atualização: {POLITICA_ATUALIZADA_EM}
       </p>
 
       <p className="mt-6 text-sm leading-relaxed text-fg-5">

@@ -606,6 +606,11 @@ export const diagnostico = pgTable(
     contatoCargo: text("contato_cargo"),
     contatoEmail: text("contato_email"),
     contatoWhatsapp: text("contato_whatsapp"),
+    // Prova do consentimento (LGPD art. 8º, §1º): quando o titular aceitou e a
+    // que versão da política. Nulo em leads internos, que não passam pelo
+    // formulário público.
+    consentimentoEm: timestamp("consentimento_em"),
+    consentimentoPolitica: text("consentimento_politica"),
     origem: text("origem")
       .$type<DiagnosticoOrigem>()
       .notNull()

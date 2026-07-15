@@ -59,7 +59,7 @@ const deps: ProcessarDeps = {
     return dup ?? null;
   },
 
-  async criarLead(lead) {
+  async criarLead(lead, consentimentoEm) {
     const [row] = await db
       .insert(schema.diagnostico)
       .values({
@@ -71,6 +71,8 @@ const deps: ProcessarDeps = {
         contatoCargo: lead.contatoCargo,
         contatoEmail: lead.email,
         contatoWhatsapp: lead.whatsapp,
+        consentimentoEm,
+        consentimentoPolitica: lead.politicaVersao,
         // Etapas 1 e 2 são o mínimo obrigatório (art. 20); a equipe ajusta o
         // escopo/classe ao trabalhar o lead.
         escopo: "inicial",

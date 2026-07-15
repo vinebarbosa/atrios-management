@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { POLITICA_VERSAO } from "../legal";
 import {
   formatarWhatsapp,
   type LeadNormalizado,
@@ -18,6 +19,7 @@ const valido: PreCadastroInput = {
   cargo: "Titular",
   whatsapp: "(84) 9 9999-8888",
   email: "maria@cartorio.com.br",
+  consentimento: true,
 };
 
 describe("validarPreCadastro", () => {
@@ -43,6 +45,21 @@ describe("validarPreCadastro", () => {
     });
     expect(data).toBeNull();
     expect(errors.email).toBe("Informe um e-mail válido.");
+  });
+
+  it("rejeita envio sem consentimento explícito", () => {
+    for (const consentimento of [undefined, false]) {
+      const { data, errors } = validarPreCadastro({ ...valido, consentimento });
+      expect(data).toBeNull();
+      expect(errors.consentimento).toBe(
+        "É preciso autorizar o contato para enviar o pré-cadastro.",
+      );
+    }
+  });
+
+  it("carimba a versão da política no lead consentido", () => {
+    const { data } = validarPreCadastro(valido);
+    expect(data?.politicaVersao).toBe(POLITICA_VERSAO);
   });
 
   it("rejeita obrigatórios vazios e whatsapp incompleto", () => {

@@ -11,16 +11,16 @@ import {
   type PreCadastroCampo,
   validarPreCadastro,
 } from "@/lib/diagnostico/pre-cadastro";
+import { whatsappUrl as waUrl } from "@/lib/landing/config";
 import { enviarPreCadastro } from "./actions";
-
-const WHATSAPP_NUMERO = "558440420438";
 
 /** Link do WhatsApp com mensagem pré-preenchida, citando a serventia quando disponível. */
 function whatsappUrl(serventia?: string) {
-  const texto = serventia
-    ? `Olá! Acabei de fazer o pré-cadastro do diagnóstico gratuito do Provimento CNJ 213/2026 pela serventia ${serventia}.`
-    : "Olá! Acabei de fazer o pré-cadastro do diagnóstico gratuito do Provimento CNJ 213/2026.";
-  return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(texto)}`;
+  return waUrl(
+    serventia
+      ? `Olá! Acabei de fazer o pré-cadastro do diagnóstico gratuito do Provimento CNJ 213/2026 pela serventia ${serventia}.`
+      : "Olá! Acabei de fazer o pré-cadastro do diagnóstico gratuito do Provimento CNJ 213/2026.",
+  );
 }
 
 const controle =
@@ -119,6 +119,7 @@ export function LandingForm() {
   const uid = useId();
   const id = (campo: string) => `${uid}-${campo}`;
   const [campos, setCampos] = useState<Campos>(VAZIO);
+  const [consentimento, setConsentimento] = useState(false);
   const [honeypot, setHoneypot] = useState("");
   const [errors, setErrors] = useState<ErrosPorCampo & { geral?: string }>({});
   const [sucesso, setSucesso] = useState(false);
@@ -133,14 +134,18 @@ export function LandingForm() {
   const submit = () => {
     if (pending) return;
     // valida no client para feedback imediato; o servidor revalida.
-    const { errors: locais } = validarPreCadastro({ ...campos });
+    const { errors: locais } = validarPreCadastro({ ...campos, consentimento });
     if (Object.keys(locais).length > 0) {
       setErrors(locais);
       return;
     }
     setErrors({});
     startTransition(async () => {
-      const res = await enviarPreCadastro({ ...campos, website: honeypot });
+      const res = await enviarPreCadastro({
+        ...campos,
+        consentimento,
+        website: honeypot,
+      });
       if (res.ok) {
         setSucesso(true);
         return;
@@ -298,6 +303,51 @@ export function LandingForm() {
       </div>
 
       <div className="mt-0.5 flex flex-col gap-2.5">
+        {/* Consentimento explícito (LGPD art. 8º): nunca pré-marcado, com a
+            finalidade declarada no próprio rótulo. */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-start gap-2.5">
+            <input
+              id={id("consentimento")}
+              type="checkbox"
+              checked={consentimento}
+              onChange={(e) => {
+                setConsentimento(e.target.checked);
+                if (errors.consentimento)
+                  setErrors((x) => ({ ...x, consentimento: undefined }));
+              }}
+              className={`mt-0.5 size-[18px] shrink-0 cursor-pointer rounded-[5px] accent-primary ${
+                errors.consentimento ? "outline outline-1 outline-danger" : ""
+              }`}
+            />
+            <label
+              htmlFor={id("consentimento")}
+              className="cursor-pointer text-xs leading-[1.55] text-fg-6 md:text-[11.5px]"
+            >
+              Autorizo a Átrios a tratar meus dados de contato (nome, cargo,
+              e-mail e WhatsApp) com a finalidade exclusiva de falar comigo
+              sobre o diagnóstico gratuito e a adequação ao Provimento CNJ
+              213/2026. Posso revogar este consentimento a qualquer momento em{" "}
+              <a
+                href="mailto:contato@atrioss.com"
+                className="text-primary-ink no-underline hover:text-primary-fg"
+              >
+                contato@atrioss.com
+              </a>
+              , como descrito na{" "}
+              <Link
+                href="/privacidade"
+                target="_blank"
+                className="text-primary-ink no-underline hover:text-primary-fg"
+              >
+                Política de privacidade
+              </Link>
+              .
+            </label>
+          </div>
+          <ErroCampo msg={errors.consentimento} />
+        </div>
+
         {errors.geral && (
           <p className="text-[13px] leading-snug text-danger">{errors.geral}</p>
         )}
@@ -309,16 +359,9 @@ export function LandingForm() {
         >
           {pending ? "Enviando…" : "Quero meu diagnóstico gratuito"}
         </button>
-        <p className="text-xs leading-[1.55] text-fg-6 md:text-[11.5px]">
-          Sem compromisso. Ao enviar, seus dados serão usados exclusivamente
-          para contato sobre o diagnóstico e a adequação ao Provimento 213/2026.{" "}
-          <Link
-            href="/privacidade"
-            className="text-primary-ink no-underline hover:text-primary-fg"
-          >
-            Política de privacidade
-          </Link>
-          .
+        <p className="text-xs leading-[1.55] text-fg-8 md:text-[11.5px]">
+          Sem compromisso. Não vendemos nem compartilhamos seus dados com
+          terceiros.
         </p>
       </div>
     </div>
