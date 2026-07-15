@@ -935,54 +935,63 @@ function Diagnostico() {
 
 /* ---- 7. Quem somos ------------------------------------------------------ */
 
-const SOCIOS = [
-  {
-    mono: "SF",
-    name: "Sócio-fundador",
-    role: "Consultoria e prática de cartório",
-    cred: "Mais de 10 anos de atuação dentro de serventia extrajudicial.",
-  },
-  {
-    mono: "ST",
-    name: "Sócio de tecnologia",
-    role: "Engenharia de software e segurança",
-    cred: "Desenvolvimento, segurança e conformidade em ambientes críticos.",
-  },
-];
-
-function QuemSomos() {
-  return (
-    <Secao
-      id="quem-somos"
-      eyebrow="Quem somos"
-      titulo="Engenharia com prática de quem opera."
-      intro="A Átrios une desenvolvimento de software e prática de operação real. É o que faz a diferença nas três frentes: mais de 10 anos de atuação dentro de serventia extrajudicial, somados a engenharia de sistemas e segurança."
-    >
-      <div className="grid gap-4 md:grid-cols-2">
-        {SOCIOS.map((s) => (
-          <Card key={s.mono} className="flex-row items-start gap-4">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-field bg-primary/12 font-mono text-[13px] font-bold text-primary-fg">
-              {s.mono}
-            </span>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[14.5px] font-semibold text-fg-1">
-                {s.name}
-              </span>
-              <span className="text-[12.5px] text-primary-ink">{s.role}</span>
-              <p className="pt-1 text-[13px] leading-[1.55] text-fg-5">
-                {s.cred}
-              </p>
-            </div>
-          </Card>
-        ))}
-      </div>
-      <p className="text-[12px] leading-[1.55] text-fg-8">
-        Fotos e nomes definitivos entram aqui quando confirmados. O layout já
-        está pronto para recebê-los.
-      </p>
-    </Secao>
-  );
-}
+// FORA DO AR por ora: os sócios ainda são placeholder ("Sócio-fundador",
+// "Sócio de tecnologia"), e um card genérico rende menos que seção nenhuma.
+// Volta quando os nomes reais forem confirmados: descomente e reponha o
+// <QuemSomos /> entre <Diagnostico /> e <Tecnologias />. Nada aponta para
+// #quem-somos no menu nem no rodapé, então não há âncora a religar.
+//
+// Cuidado ao voltar: esta seção é um dos três pilares de prova social que o site
+// admite (sócios, domínio da norma, stack). Os outros dois seguem no ar.
+//
+// const SOCIOS = [
+//   {
+//     mono: "SF",
+//     name: "Sócio-fundador",
+//     role: "Consultoria e prática de cartório",
+//     cred: "Mais de 10 anos de atuação dentro de serventia extrajudicial.",
+//   },
+//   {
+//     mono: "ST",
+//     name: "Sócio de tecnologia",
+//     role: "Engenharia de software e segurança",
+//     cred: "Desenvolvimento, segurança e conformidade em ambientes críticos.",
+//   },
+// ];
+//
+// function QuemSomos() {
+//   return (
+//     <Secao
+//       id="quem-somos"
+//       eyebrow="Quem somos"
+//       titulo="Engenharia com prática de quem opera."
+//       intro="A Átrios une desenvolvimento de software e prática de operação real. É o que faz a diferença nas três frentes: mais de 10 anos de atuação dentro de serventia extrajudicial, somados a engenharia de sistemas e segurança."
+//     >
+//       <div className="grid gap-4 md:grid-cols-2">
+//         {SOCIOS.map((s) => (
+//           <Card key={s.mono} className="flex-row items-start gap-4">
+//             <span className="flex size-11 shrink-0 items-center justify-center rounded-field bg-primary/12 font-mono text-[13px] font-bold text-primary-fg">
+//               {s.mono}
+//             </span>
+//             <div className="flex flex-col gap-0.5">
+//               <span className="text-[14.5px] font-semibold text-fg-1">
+//                 {s.name}
+//               </span>
+//               <span className="text-[12.5px] text-primary-ink">{s.role}</span>
+//               <p className="pt-1 text-[13px] leading-[1.55] text-fg-5">
+//                 {s.cred}
+//               </p>
+//             </div>
+//           </Card>
+//         ))}
+//       </div>
+//       <p className="text-[12px] leading-[1.55] text-fg-8">
+//         Fotos e nomes definitivos entram aqui quando confirmados. O layout já
+//         está pronto para recebê-los.
+//       </p>
+//     </Secao>
+//   );
+// }
 
 /* ---- 8. Tecnologias ----------------------------------------------------- */
 
@@ -1206,7 +1215,7 @@ export default async function HomePage() {
       <Seguranca />
       <Cartorios norma={norma} />
       <Diagnostico />
-      <QuemSomos />
+      {/* <QuemSomos /> fora do ar até os nomes reais dos sócios (ver acima). */}
       <Tecnologias />
       <CtaFinal />
       <Rodape />
