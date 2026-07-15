@@ -59,7 +59,7 @@ export function Topo({
   return (
     <div className={cn("flex items-start justify-between gap-3", className)}>
       {comoLink ? (
-        <Link href="/site" aria-label="Átrios — página inicial">
+        <Link href="/" aria-label="Átrios — página inicial">
           <LogoAtrios />
         </Link>
       ) : (

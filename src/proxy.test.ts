@@ -7,15 +7,14 @@ import { isPublic } from "./proxy";
 describe("isPublic", () => {
   it("libera o site institucional e a landing de pré-cadastro", () => {
     expect(isPublic("/")).toBe(true);
-    expect(isPublic("/site")).toBe(true);
     expect(isPublic("/diagnostico")).toBe(true);
   });
 
   it("libera as imagens OG — senão o card do WhatsApp sai sem imagem", () => {
     // Sem ponto no path: o matcher do proxy não as ignora sozinho. Elas moram
     // no segmento da página que ilustram (convention do App Router).
-    expect(isPublic("/site/opengraph-image")).toBe(true);
-    expect(isPublic("/site/twitter-image")).toBe(true);
+    expect(isPublic("/opengraph-image")).toBe(true);
+    expect(isPublic("/twitter-image")).toBe(true);
     expect(isPublic("/diagnostico/opengraph-image")).toBe(true);
     expect(isPublic("/diagnostico/twitter-image")).toBe(true);
   });

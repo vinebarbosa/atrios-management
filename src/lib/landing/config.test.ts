@@ -7,7 +7,7 @@ const src = (rel: string) =>
   readFileSync(fileURLToPath(new URL(`../../${rel}`, import.meta.url)), "utf8");
 
 /** As duas páginas públicas que precisam falar a mesma língua. */
-const PAGINAS = ["app/site/page.tsx", "app/diagnostico/page.tsx"];
+const PAGINAS = ["app/page.tsx", "app/diagnostico/page.tsx"];
 
 afterEach(() => {
   delete process.env.LANDING_SHOW_PARTNERS;
