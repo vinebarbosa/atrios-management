@@ -9,9 +9,13 @@ import { type NextRequest, NextResponse } from "next/server";
 // (convention do App Router): não têm ponto no path, então o matcher abaixo NÃO
 // as ignora e, sem estarem aqui, o crawler do WhatsApp levava 307 pro /login e o
 // card saía sem imagem. As da /diagnostico já passam pelo prefixo `diagnostico`.
-// `site` é o site institucional público (era `/`, ver next.config.ts).
+// `site` é o site institucional público (era `/`, ver next.config.ts). As rotas
+// de imagem OG (`opengraph-image`/`twitter-image`, convention do App Router) não
+// têm ponto no path, então o matcher abaixo NÃO as ignora — sem estarem
+// liberadas, o crawler do WhatsApp leva 307 pro /login e o card sai sem imagem.
+// Hoje elas vivem sob `/site` e `/diagnostico`, já cobertos pelos prefixos.
 const PUBLIC =
-  /^\/(login|esqueci-senha|redefinir-senha|convite|sem-convite|termos|privacidade|diagnostico|site|opengraph-image|twitter-image|api\/auth)(\/|$)/;
+  /^\/(login|esqueci-senha|redefinir-senha|convite|sem-convite|termos|privacidade|diagnostico|site|api\/auth)(\/|$)/;
 
 // `/` só redireciona pra /diagnostico (next.config.ts), mas segue público aqui
 // para que o visitante sem sessão receba o redirect em vez de cair no /login.
