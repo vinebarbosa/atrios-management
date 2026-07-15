@@ -324,17 +324,15 @@ export function LandingForm() {
               htmlFor={id("consentimento")}
               className="cursor-pointer text-xs leading-[1.55] text-fg-6 md:text-[11.5px]"
             >
-              Autorizo a Átrios a tratar meus dados de contato com a finalidade
-              exclusiva de falar comigo sobre o diagnóstico gratuito e a
-              adequação à Lei Geral de Proteção de Dados (LGPD). Posso revogar
-              este consentimento a qualquer momento em{" "}
-              <a
-                href="mailto:contato@atrioss.com"
-                className="text-primary-ink no-underline hover:text-primary-fg"
-              >
-                contato@atrioss.com
-              </a>
-              , como descrito na{" "}
+              {/* Piso legal, não enfeite, e as duas partes têm dono:
+                  "para tratar do diagnóstico gratuito" é a finalidade
+                  determinada que o art. 8º, §4º exige (sem ela o consentimento
+                  é nulo, e remeter à política não supre: a finalidade tem que
+                  estar no ato); "Posso revogar quando quiser em <e-mail>" é o
+                  §5º, que pede o meio, não só o direito. Encurtar além disto
+                  começa a custar validade, não só palavras. */}
+              Eu autorizo a Átrios a coletar meus dados para tratar do
+              diagnóstico gratuito, segundo a{" "}
               <Link
                 href="/privacidade"
                 target="_blank"
@@ -342,6 +340,13 @@ export function LandingForm() {
               >
                 Política de privacidade
               </Link>
+              . Posso revogar quando quiser em{" "}
+              <a
+                href="mailto:contato@atrioss.com"
+                className="text-primary-ink no-underline hover:text-primary-fg"
+              >
+                contato@atrioss.com
+              </a>
               .
             </label>
           </div>
