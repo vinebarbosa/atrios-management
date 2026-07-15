@@ -458,6 +458,16 @@ const PARAMETROS: SeedParametro[] = [
     descricao:
       "Decisão CGJ-RN de 02/07/2026, PP 0000897-12.2026.2.00.0820, a pedido da Anoreg/RN, que deferiu prorrogação de 90 dias — única admitida pelo art. 21, condicionada a medidas mitigatórias e acompanhamento pela Seção de Correição.",
   },
+  // A `descricao` acima é prosa de proveniência, para quem lê o banco. O site
+  // institucional cita a decisão na própria copy, então data e processo entram
+  // também como valor estruturado: assim a página não hardcoda data nenhuma nem
+  // depende de fatiar texto livre.
+  { chave: "prorrogacao_data", valor: "02/07/2026", uf: "RN" },
+  {
+    chave: "prorrogacao_processo",
+    valor: "PP 0000897-12.2026.2.00.0820",
+    uf: "RN",
+  },
   // parâmetros técnicos mínimos por classe (linha de cabeçalho do relatório)
   {
     chave: "parametros_tecnicos_classe_1",

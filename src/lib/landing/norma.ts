@@ -41,6 +41,10 @@ export interface Norma {
   prorrogacaoDias: number;
   /** Descrição da decisão que concedeu a prorrogação (processo, data, órgão). */
   prorrogacaoDescricao: string | null;
+  /** dd/mm/aaaa da decisão que concedeu a prorrogação estadual. */
+  prorrogacaoData: string | null;
+  /** Processo administrativo da decisão (ex.: "PP 0000897-..."). */
+  prorrogacaoProcesso: string | null;
   /** art. 16, I — teto de arrecadação semestral da Classe 1, em reais. */
   tetoClasse1: number;
   /** art. 16, II — teto de arrecadação semestral da Classe 2, em reais. */
@@ -58,6 +62,8 @@ export function montarNorma(rows: ParametroRow[], hoje: Date): Norma {
   const porClasse: Record<number, ClasseNorma> = {};
   let prorrogacaoDias = 0;
   let prorrogacaoDescricao: string | null = null;
+  let prorrogacaoData: string | null = null;
+  let prorrogacaoProcesso: string | null = null;
   let vigencia = "";
 
   for (const classe of CLASSES) {
@@ -75,6 +81,8 @@ export function montarNorma(rows: ParametroRow[], hoje: Date): Norma {
     };
     prorrogacaoDias = params.prorrogacaoDias;
     prorrogacaoDescricao = params.prorrogacaoDescricao;
+    prorrogacaoData = params.prorrogacaoData;
+    prorrogacaoProcesso = params.prorrogacaoProcesso;
     vigencia = fmtData(params.vigencia);
   }
 
@@ -83,6 +91,8 @@ export function montarNorma(rows: ParametroRow[], hoje: Date): Norma {
     porClasse,
     prorrogacaoDias,
     prorrogacaoDescricao,
+    prorrogacaoData,
+    prorrogacaoProcesso,
     ...tetosDaNorma(rows),
   };
 }

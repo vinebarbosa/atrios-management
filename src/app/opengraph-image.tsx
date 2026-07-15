@@ -10,12 +10,15 @@ import { ImageResponse } from "next/og";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt =
-  "Átrios — Adequação de cartórios ao Provimento CNJ 213/2026 no RN";
+  "Átrios Tecnologia e Consultoria: constrói e protege sistemas";
 
+// As três frentes, na ordem do site. Este card é o da home: quando ele falava só
+// de cartórios, contradizia o título e a descrição, que anunciam a empresa de
+// tecnologia. O card exclusivo do Provimento é o da /diagnostico.
 const PILLS = [
-  "Provimento CNJ 213/2026",
-  "Cartórios do RN",
-  "Diagnóstico gratuito",
+  "Software sob medida",
+  "Segurança e LGPD",
+  "Cartórios e Prov. 213",
 ];
 
 export default async function OpenGraphImage() {
@@ -64,7 +67,7 @@ export default async function OpenGraphImage() {
             color: "#f2f2f4",
           }}
         >
-          Adequação de cartórios ao Provimento CNJ 213/2026
+          A Átrios constrói e protege os sistemas de que a sua operação depende
         </div>
       </div>
 

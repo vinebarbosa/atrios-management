@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ETAPAS, ETAPAS_ESCOPO } from "@/lib/diagnostico/constants";
 import {
   CONTATO_EMAIL,
   showPartners,
@@ -14,27 +13,37 @@ import { CLASSES, type Norma } from "@/lib/landing/norma";
 import { carregarNorma } from "@/lib/landing/queries";
 
 // Site institucional público — servido fora da autenticação (ver src/proxy.ts).
-// Portado do layout entregue pelo design (v3 standalone), com duas diferenças
-// deliberadas em relação ao HTML original:
 //
-// 1. Nenhuma data, prazo ou teto é literal aqui. O HTML trazia a vigência, a
-//    prorrogação, os tetos e as datas-limite escritos à mão; tudo vem de
-//    parametro_norma via carregarNorma() — o porquê está em lib/landing/norma.
-//    (O teste de fonte única lê este arquivo como texto: nem um comentário
-//    pode conter data literal, e é por isso que não há nenhuma citada aqui.)
-// 2. Os logos de parceria passam por showPartners(), que só os revela quando a
-//    parceria estiver formalizada. No HTML vinham fixos sob "Realização e
-//    apoio" — o próprio design modela isso como um toggle, ligado no preview.
+// Implementação do protótipo aprovado (site-institucional-designer-v3). Ele é a
+// fonte da verdade: estrutura, copy, paleta e ordem das seções não se
+// reinterpretam aqui. Só há duas diferenças deliberadas:
+//
+// 1. Nenhuma data, prazo ou teto é literal. O protótipo trazia a vigência, a
+//    prorrogação, os tetos, as datas-limite e a data da decisão da CGJ-RN
+//    escritos à mão; tudo vem de parametro_norma via carregarNorma() — o porquê
+//    está em lib/landing/norma. (O teste de fonte única lê este arquivo como
+//    texto: nem um comentário pode conter data literal.)
+// 2. Os logos de parceria passam por showPartners(), a mesma flag da
+//    /diagnostico. No protótipo era prop com default `true`.
+//
+// Copy: sem travessão em texto visível (regra do handoff). Onde caberia um, use
+// ponto, vírgula, dois-pontos ou parênteses. Vale para alt, aria-label e meta.
+// Em comentário, como este, tanto faz.
 //
 // Não capta lead por conta própria: todo CTA aponta para /diagnostico (que grava
 // em Leads) ou para o WhatsApp. Um segundo canal quebraria o funil.
 
+// og:title e og:description são os do protótipo, palavra por palavra. O <title>
+// é trabalho da implementação e cobre as duas buscas que trazem gente aqui: a
+// marca e a vertical quente.
 const META_TITLE = "Átrios Tecnologia: constrói e protege sistemas";
 const META_DESC =
   "Software sob medida, segurança da informação e LGPD, e a vertical de cartórios (Provimento 213). Uma competência, três frentes.";
+const PAGE_TITLE =
+  "Átrios Tecnologia e Consultoria: software, LGPD e Provimento 213 no RN";
 
 export const metadata: Metadata = {
-  title: META_TITLE,
+  title: PAGE_TITLE,
   description: META_DESC,
   alternates: { canonical: "/" },
   keywords: [
@@ -208,10 +217,10 @@ function Topo() {
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-surface-0/70 backdrop-blur-[14px]">
       <nav className={`${wrap} flex items-center justify-between gap-3 py-3.5`}>
-        <Link href="#topo" aria-label="Átrios — início">
+        <Link href="#topo" aria-label="Átrios, início">
           <Image
             src="/landing/atrios-logo-white.png"
-            alt="Átrios — Tecnologia e Consultoria"
+            alt="Átrios Tecnologia e Consultoria"
             width={104}
             height={30}
             priority
@@ -646,6 +655,42 @@ function Classes({ norma }: { norma: Norma }) {
   );
 }
 
+// Copy do protótipo, não as constantes ETAPAS/ETAPAS_ESCOPO: aquelas servem ao
+// módulo interno de diagnóstico e trazem o prefixo "Etapa N" com travessão.
+// Aqui a copy é a revisada pelo design, e não pode ter travessão.
+const ETAPAS_SITE = [
+  {
+    n: 1,
+    title: "Organização e proteção de dados",
+    scope: "Responsáveis nomeados, regras escritas e adequação à LGPD.",
+    obrig: true,
+  },
+  {
+    n: 2,
+    title: "Estrutura e funcionamento",
+    scope: "Energia, equipamentos, internet e plano para emergências.",
+    obrig: true,
+  },
+  {
+    n: 3,
+    title: "Proteção e cópias de segurança",
+    scope: "Como os dados são protegidos e como o backup é feito.",
+    obrig: false,
+  },
+  {
+    n: 4,
+    title: "Testes e acompanhamento",
+    scope: "Testes que provam que a proteção funciona de verdade.",
+    obrig: false,
+  },
+  {
+    n: 5,
+    title: "Integração e manutenção",
+    scope: "Integração com o CNJ, treinamentos e manutenção contínua.",
+    obrig: false,
+  },
+];
+
 function Etapas() {
   return (
     <div className="flex flex-col gap-3">
@@ -653,25 +698,25 @@ function Etapas() {
         As 5 etapas sequenciais
       </h3>
       <ol className="flex flex-col gap-2">
-        {[1, 2, 3, 4, 5].map((e) => (
-          <li key={e}>
+        {ETAPAS_SITE.map((e) => (
+          <li key={e.n}>
             <Card className="flex-row items-start gap-3.5">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-btn bg-primary/12 text-[13.5px] font-bold text-primary-fg">
-                {e}
+                {e.n}
               </span>
               <div className="flex flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-[14.5px] font-semibold leading-[1.4] text-fg-1">
-                    {ETAPAS[e]}
+                    {e.title}
                   </span>
-                  {e <= 2 && (
-                    <span className="rounded-chip border border-danger/30 bg-danger/12 px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.04em] text-danger">
-                      obrigatória
+                  {e.obrig && (
+                    <span className="rounded-pill border border-danger/28 bg-danger/10 px-[7px] py-0.5 text-[10.5px] font-semibold text-danger">
+                      obrigatória já
                     </span>
                   )}
                 </div>
                 <span className="text-[13px] leading-[1.5] text-fg-5">
-                  {ETAPAS_ESCOPO[e]}
+                  {e.scope}
                 </span>
               </div>
             </Card>
@@ -704,25 +749,42 @@ function Cartorios({ norma }: { norma: Norma }) {
         <Etapas />
         <Card className="max-w-[820px] border-primary/22 bg-primary/5">
           <span className="text-[14.5px] font-semibold text-fg-1">
-            A prorrogação do RN: {norma.prorrogacaoDias} dias, uma única vez
+            {`A prorrogação da CGJ-RN é de ${norma.prorrogacaoDias} dias, e é única.`}
           </span>
           <p className="text-[13.5px] leading-[1.6] text-fg-4">
-            Vale de ofício para todas as serventias do estado — nenhum cartório
-            precisa requerer — e é a única que a norma admite: o art. 21
-            autoriza prorrogar uma única vez. Não haverá outra. E o prazo
-            adicional não dispensa nada: durante o período, as medidas
-            mitigatórias continuam obrigatórias. A norma está em vigor desde{" "}
-            {norma.vigencia}.
+            {norma.prorrogacaoData && norma.prorrogacaoProcesso
+              ? `Decisão de ${norma.prorrogacaoData} (${norma.prorrogacaoProcesso}). `
+              : ""}
+            Vale de ofício para todas as serventias do RN, ninguém precisa
+            requerer. O art. 21 permite prorrogar uma única vez, então não
+            haverá outra. E o prazo adicional não dispensa nada: durante o
+            período, as medidas mitigatórias continuam obrigatórias. A norma
+            está em vigor desde {norma.vigencia}.
           </p>
-          {norma.prorrogacaoDescricao && (
-            <p className="border-t border-line pt-2.5 text-[12px] leading-[1.55] text-fg-7">
-              <span className="font-semibold text-fg-6">Fonte: </span>
-              {norma.prorrogacaoDescricao}
-            </p>
-          )}
         </Card>
+        <CtaCartorios />
       </div>
     </Secao>
+  );
+}
+
+/**
+ * Fecha a seção de cartórios: é onde o protótipo põe o CTA do diagnóstico e as
+ * logos de parceria, e não na seção "Como funciona o diagnóstico".
+ */
+function CtaCartorios() {
+  return (
+    <div className="flex flex-col gap-3">
+      <Titulo>Comece pelo diagnóstico gratuito.</Titulo>
+      <p className="max-w-[720px] text-pretty text-[14.5px] leading-[1.6] text-fg-5">
+        Uma conversa de 20 minutos e um relatório por escrito com a sua classe,
+        seus prazos e cada ponto de adequação. Sem compromisso.
+      </p>
+      <Link href="/diagnostico" className={`${btnPrimario} mt-1 w-fit`}>
+        Começar meu diagnóstico
+      </Link>
+      <Parceiros />
+    </div>
   );
 }
 
@@ -864,7 +926,6 @@ function Diagnostico() {
           <Link href="/diagnostico" className={`${btnPrimario} mt-2 w-fit`}>
             Começar meu diagnóstico
           </Link>
-          <Parceiros />
         </div>
         <PreviewRelatorio />
       </div>
@@ -1022,7 +1083,7 @@ function Rodape() {
           <div className="flex flex-col gap-3">
             <Image
               src="/landing/atrios-logo-white.png"
-              alt="Átrios — Tecnologia e Consultoria"
+              alt="Átrios Tecnologia e Consultoria"
               width={104}
               height={30}
               className="h-[30px] w-auto"

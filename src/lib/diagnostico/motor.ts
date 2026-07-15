@@ -129,6 +129,10 @@ export interface ParametrosTecnicos {
 
 export interface ParametrosNorma extends ParametrosPrazo {
   prorrogacaoDescricao: string | null;
+  /** dd/mm/aaaa da decisão que concedeu a prorrogação estadual. */
+  prorrogacaoData: string | null;
+  /** Número do processo administrativo da decisão (ex.: "PP 0000897-..."). */
+  prorrogacaoProcesso: string | null;
   tecnicos: ParametrosTecnicos | null;
 }
 
@@ -152,9 +156,9 @@ export function parametrosParaClasse(
       `Parâmetros da norma ausentes para a classe ${classe} — rode npm run db:seed:provimento.`,
     );
   }
-  const prorrogacao = rows.find(
-    (r) => r.chave === "prorrogacao_art20_dias" && r.uf === uf.toUpperCase(),
-  );
+  const daUf = (chave: string) =>
+    rows.find((r) => r.chave === chave && r.uf === uf.toUpperCase());
+  const prorrogacao = daUf("prorrogacao_art20_dias");
   const prorrogacaoDias = prorrogacao ? Number(prorrogacao.valor) : 0;
   // Teto legal do art. 21 ("por até 90 dias"): um valor acima é juridicamente
   // impossível — falha alto em vez de publicar uma afirmação falsa.
@@ -171,6 +175,11 @@ export function parametrosParaClasse(
     prazoArt23Meses: Number(art23),
     prorrogacaoDias,
     prorrogacaoDescricao: prorrogacao?.descricao ?? null,
+    // Estruturados (e não extraídos da `descricao`, que é prosa livre) porque a
+    // home cita a decisão na copy: data e processo precisam sair do banco, como
+    // qualquer outro dado da norma.
+    prorrogacaoData: daUf("prorrogacao_data")?.valor ?? null,
+    prorrogacaoProcesso: daUf("prorrogacao_processo")?.valor ?? null,
     tecnicos: tecnicosStr
       ? (JSON.parse(tecnicosStr) as ParametrosTecnicos)
       : null,
