@@ -219,7 +219,7 @@ function Topo() {
     <header className="sticky top-0 z-50 border-b border-line bg-surface-0/70 backdrop-blur-[14px]">
       <nav className={`${wrap} flex items-center justify-between gap-3 py-3.5`}>
         <Link href="#topo" aria-label="Átrios, início">
-          <LogoAtriosLockup className="h-[26px] w-auto text-white" />
+          <LogoAtriosLockup className="h-[34px] w-auto text-white" />
         </Link>
         <div className="hidden items-center gap-6 md:flex">
           {NAV.map((n) => (
@@ -1087,7 +1087,7 @@ function Rodape() {
             {/* self-start: sem ele o SVG estica na coluna flex e o desenho se
                 centraliza dentro da caixa (preserveAspectRatio xMidYMid), o que
                 deixa o logo fora do prumo do texto abaixo. */}
-            <LogoAtriosLockup className="h-[26px] w-auto self-start text-white" />
+            <LogoAtriosLockup className="h-[36px] w-auto self-start text-white" />
             <p className="max-w-[420px] text-[13px] leading-[1.6] text-fg-6">
               Software sob medida, segurança da informação e LGPD, e a vertical
               de cartórios (Provimento CNJ 213/2026). A mesma competência que
